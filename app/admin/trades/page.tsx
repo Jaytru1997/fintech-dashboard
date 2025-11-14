@@ -71,8 +71,8 @@ export default function AdminTradesPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold">Trades</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold text-white">Trades</h1>
+        <p className="text-gray-400 mt-2">
           Manage all platform trades
         </p>
       </div>
@@ -98,7 +98,7 @@ export default function AdminTradesPage() {
             <TableBody>
               {trades.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center text-gray-400">
                     No trades found
                   </TableCell>
                 </TableRow>
@@ -116,7 +116,7 @@ export default function AdminTradesPage() {
                             ? "bg-primary/20 text-primary"
                             : trade.status === "completed"
                             ? "bg-green-500/20 text-green-500"
-                            : "bg-muted text-muted-foreground"
+                            : "bg-background-dark text-gray-400"
                         }`}
                       >
                         {trade.status}

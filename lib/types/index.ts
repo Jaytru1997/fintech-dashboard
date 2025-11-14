@@ -36,8 +36,12 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
-  token: string;
-  user: User;
+  data: {
+    token: string;
+    user: User;
+  };
+  message: string;
+  status: "success" | "error";
 }
 
 export interface TwoFASetupResponse {

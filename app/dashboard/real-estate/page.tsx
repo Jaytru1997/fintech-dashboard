@@ -80,8 +80,8 @@ export default function RealEstatePage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold">Real Estate</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold text-white">Real Estate</h1>
+        <p className="text-gray-400 mt-2">
           Invest in real estate portfolios and earn passive income
         </p>
       </div>
@@ -177,9 +177,9 @@ export default function RealEstatePage() {
                               placeholder="Enter duration"
                             />
                           </div>
-                          <div className="p-4 bg-muted rounded-lg">
-                            <p className="text-sm text-muted-foreground">Expected Return:</p>
-                            <p className="text-2xl font-bold">
+                          <div className="p-4 bg-background-dark rounded-lg">
+                            <p className="text-sm text-gray-400">Expected Return:</p>
+                            <p className="text-2xl font-bold text-white">
                               ${amount && durationMonths
                                 ? (parseFloat(amount) * (1 + property.roi / 100) * (parseInt(durationMonths) / 12)).toFixed(2)
                                 : "0.00"}
@@ -244,7 +244,7 @@ export default function RealEstatePage() {
                             className={`px-2 py-1 rounded text-xs ${
                               investment.status === "active"
                                 ? "bg-primary/20 text-primary"
-                                : "bg-muted text-muted-foreground"
+                                : "bg-background-dark text-gray-400"
                             }`}
                           >
                             {investment.status}

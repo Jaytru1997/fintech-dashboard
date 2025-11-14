@@ -73,8 +73,8 @@ export default function SignalPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold">Signal Strength</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold text-white">Signal Strength</h1>
+        <p className="text-gray-400 mt-2">
           Purchase signal strength to improve your trading performance
         </p>
       </div>
@@ -89,7 +89,7 @@ export default function SignalPage() {
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold">{user?.signalStrength || 0}%</span>
+              <span className="text-2xl font-bold text-white">{user?.signalStrength || 0}%</span>
             </div>
             <div className="w-full bg-gray-800 rounded-full h-4">
               <div
@@ -102,7 +102,7 @@ export default function SignalPage() {
       </Card>
 
       <div>
-        <h2 className="text-2xl font-semibold mb-4">Purchase Signal Strength</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-white">Purchase Signal Strength</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {signalPrices.map((price) => (
             <Card key={price._id} className="hover:shadow-lg transition-shadow">
@@ -141,12 +141,12 @@ export default function SignalPage() {
                           placeholder="Enter quantity"
                         />
                       </div>
-                      <div className="p-4 bg-muted rounded-lg">
-                        <p className="text-sm text-muted-foreground">Total Amount:</p>
-                        <p className="text-2xl font-bold">
+                      <div className="p-4 bg-background-dark rounded-lg">
+                        <p className="text-sm text-gray-400">Total Amount:</p>
+                        <p className="text-2xl font-bold text-white">
                           ${amount ? (parseFloat(amount) * price.amount).toFixed(2) : "0.00"}
                         </p>
-                        <p className="text-sm text-muted-foreground mt-2">
+                        <p className="text-sm text-gray-400 mt-2">
                           Signal Strength Gain: +{amount ? (parseFloat(amount) * price.signalValue).toFixed(0) : "0"}%
                         </p>
                       </div>
@@ -169,7 +169,7 @@ export default function SignalPage() {
       {signalPrices.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">No signal prices available</p>
+            <p className="text-gray-400">No signal prices available</p>
           </CardContent>
         </Card>
       )}

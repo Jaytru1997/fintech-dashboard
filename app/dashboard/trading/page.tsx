@@ -97,8 +97,8 @@ export default function TradingPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold">Trading</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold text-white">Trading</h1>
+        <p className="text-gray-400 mt-2">
           Execute trades and manage your trading portfolio
         </p>
       </div>
@@ -275,7 +275,7 @@ export default function TradingPage() {
                 <TableBody>
                   {trades.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center text-gray-400">
                         No trades found
                       </TableCell>
                     </TableRow>
@@ -304,7 +304,7 @@ export default function TradingPage() {
                                 ? "bg-primary/20 text-primary"
                                 : trade.status === "completed"
                                 ? "bg-green-500/20 text-green-500"
-                                : "bg-muted text-muted-foreground"
+                                : "bg-background-dark text-gray-400"
                             }`}
                           >
                             {trade.status}

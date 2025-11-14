@@ -17,8 +17,7 @@ import Link from "next/link";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  isAdmin: z.boolean().optional(),
+  password: z.string().min(6, "Password must be at least 6 characters")
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -35,7 +34,8 @@ export default function LoginPage() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      isAdmin: false,
+      email: "",
+      password: "",
     },
   });
 
@@ -43,9 +43,9 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const response = await authApi.login(data);
-      setAuth(response.token, response.user, data.isAdmin || false);
+      setAuth(response.data.token, response.data.user, response.data.user.isAdmin || false);
       toast.success("Login successful!");
-      router.push(data.isAdmin ? "/admin" : "/dashboard");
+      router.push(response.data.user?.isAdmin ? "/admin" : "/dashboard");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Login failed");
     } finally {
@@ -54,7 +54,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background-darkest p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -96,18 +96,6 @@ export default function LoginPage() {
                 )}
               </div>
 
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isAdmin"
-                  {...register("isAdmin")}
-                  className="rounded border-gray-800"
-                />
-                <Label htmlFor="isAdmin" className="text-sm">
-                  Login as Admin
-                </Label>
-              </div>
-
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
@@ -119,7 +107,7 @@ export default function LoginPage() {
                 >
                   Forgot password?
                 </Link>
-                <p className="text-muted-foreground">
+                <p className="text-gray-400">
                   Don't have an account?{" "}
                   <Link href="/auth/register" className="text-primary hover:underline">
                     Sign up

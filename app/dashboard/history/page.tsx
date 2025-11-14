@@ -60,11 +60,11 @@ export default function HistoryPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
+        <h1 className="text-3xl font-bold flex items-center gap-2 text-white">
           <History className="h-8 w-8" />
           Transaction History
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-gray-400 mt-2">
           View all your transactions in one place
         </p>
       </div>
@@ -99,7 +99,7 @@ export default function HistoryPage() {
                 <TableBody>
                   {trades.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center text-gray-400">
                         No trades found
                       </TableCell>
                     </TableRow>
@@ -115,7 +115,7 @@ export default function HistoryPage() {
                             className={`px-2 py-1 rounded text-xs ${
                               trade.status === "active"
                                 ? "bg-primary/20 text-primary"
-                                : "bg-muted text-muted-foreground"
+                                : "bg-background-dark text-gray-400"
                             }`}
                           >
                             {trade.status}
@@ -165,7 +165,7 @@ export default function HistoryPage() {
                 <TableBody>
                   {deposits.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center text-gray-400">
                         No deposits found
                       </TableCell>
                     </TableRow>
@@ -219,7 +219,7 @@ export default function HistoryPage() {
                 <TableBody>
                   {withdrawals.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center text-gray-400">
                         No withdrawals found
                       </TableCell>
                     </TableRow>
@@ -273,7 +273,7 @@ export default function HistoryPage() {
                 <TableBody>
                   {stakings.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center text-gray-400">
                         No stakings found
                       </TableCell>
                     </TableRow>
@@ -288,7 +288,7 @@ export default function HistoryPage() {
                             className={`px-2 py-1 rounded text-xs ${
                               staking.status === "active"
                                 ? "bg-primary/20 text-primary"
-                                : "bg-muted text-muted-foreground"
+                                : "bg-background-dark text-gray-400"
                             }`}
                           >
                             {staking.status}
@@ -325,7 +325,7 @@ export default function HistoryPage() {
                 <TableBody>
                   {investments.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center text-gray-400">
                         No investments found
                       </TableCell>
                     </TableRow>
@@ -340,7 +340,7 @@ export default function HistoryPage() {
                             className={`px-2 py-1 rounded text-xs ${
                               investment.status === "active"
                                 ? "bg-primary/20 text-primary"
-                                : "bg-muted text-muted-foreground"
+                                : "bg-background-dark text-gray-400"
                             }`}
                           >
                             {investment.status}

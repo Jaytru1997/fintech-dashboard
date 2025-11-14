@@ -104,8 +104,8 @@ export default function AdminUsersPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold">Users</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold text-white">Users</h1>
+        <p className="text-gray-400 mt-2">
           Manage all platform users
         </p>
       </div>
@@ -128,7 +128,7 @@ export default function AdminUsersPage() {
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center text-gray-400">
                     No users found
                   </TableCell>
                 </TableRow>

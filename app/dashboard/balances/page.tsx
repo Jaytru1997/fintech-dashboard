@@ -103,13 +103,13 @@ export default function BalancesPage() {
     >
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Balances</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-3xl font-bold text-white">Balances</h1>
+          <p className="text-gray-400 mt-2">
             View and manage your account balances
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm">Currency:</span>
+          <span className="text-sm text-gray-300">Currency:</span>
           <Select
             value={user?.currency || "USD"}
             onValueChange={handleCurrencyChange}

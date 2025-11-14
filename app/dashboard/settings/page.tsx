@@ -112,8 +112,8 @@ export default function SettingsPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold text-white">Settings</h1>
+        <p className="text-gray-400 mt-2">
           Manage your account settings and security
         </p>
       </div>
@@ -226,17 +226,17 @@ export default function SettingsPage() {
                   }`}
                 >
                   <input {...getInputProps()} />
-                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
                   {kycFile ? (
                     <p className="text-sm">{kycFile.name}</p>
                   ) : (
                     <div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-gray-400">
                         {isDragActive
                           ? "Drop the file here"
                           : "Drag & drop a file here, or click to select"}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-2">
+                      <p className="text-xs text-gray-400 mt-2">
                         PNG, JPG, PDF up to 10MB
                       </p>
                     </div>

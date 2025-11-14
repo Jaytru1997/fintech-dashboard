@@ -65,8 +65,8 @@ export default function AdminWithdrawalsPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold">Withdrawals</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold text-white">Withdrawals</h1>
+        <p className="text-gray-400 mt-2">
           Review and manage withdrawal requests
         </p>
       </div>
@@ -91,7 +91,7 @@ export default function AdminWithdrawalsPage() {
             <TableBody>
               {withdrawals.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center text-gray-400">
                     No withdrawals found
                   </TableCell>
                 </TableRow>

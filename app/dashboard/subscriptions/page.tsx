@@ -68,8 +68,8 @@ export default function SubscriptionsPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold">Subscription Plans</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold text-white">Subscription Plans</h1>
+        <p className="text-gray-400 mt-2">
           Choose a subscription plan that fits your needs
         </p>
       </div>
@@ -134,7 +134,7 @@ export default function SubscriptionsPage() {
       {plans.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">No subscription plans available</p>
+            <p className="text-gray-400">No subscription plans available</p>
           </CardContent>
         </Card>
       )}

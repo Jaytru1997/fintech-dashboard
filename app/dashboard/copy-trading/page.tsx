@@ -64,8 +64,8 @@ export default function CopyTradingPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold">Copy Trading</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold text-white">Copy Trading</h1>
+        <p className="text-gray-400 mt-2">
           Follow experienced traders and copy their trades automatically
         </p>
       </div>
@@ -82,7 +82,7 @@ export default function CopyTradingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Performance</span>
+                <span className="text-sm text-gray-400">Performance</span>
                 <span className="text-lg font-bold text-primary">
                   {trader.performance > 0 ? "+" : ""}
                   {trader.performance}%
@@ -94,7 +94,7 @@ export default function CopyTradingPage() {
                     trader.performance > 0 ? "text-green-500" : "text-error"
                   }`}
                 />
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-gray-400">
                   {trader.performance > 0 ? "Profitable" : "Loss"}
                 </span>
               </div>
@@ -122,7 +122,7 @@ export default function CopyTradingPage() {
       {traders.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">No copy traders available</p>
+            <p className="text-gray-400">No copy traders available</p>
           </CardContent>
         </Card>
       )}

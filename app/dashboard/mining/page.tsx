@@ -80,8 +80,8 @@ export default function MiningPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold">Mining Pools</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold text-white">Mining Pools</h1>
+        <p className="text-gray-400 mt-2">
           Stake in mining pools to earn passive income
         </p>
       </div>
@@ -107,10 +107,10 @@ export default function MiningPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-400">
                       Min Stake: ${pool.minStake}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-400">
                       Duration: {pool.durationDays} days
                     </p>
                   </div>
@@ -153,9 +153,9 @@ export default function MiningPage() {
                             placeholder="Enter duration"
                           />
                         </div>
-                        <div className="p-4 bg-muted rounded-lg">
-                          <p className="text-sm text-muted-foreground">Expected Return:</p>
-                          <p className="text-2xl font-bold">
+                        <div className="p-4 bg-background-dark rounded-lg">
+                          <p className="text-sm text-gray-400">Expected Return:</p>
+                          <p className="text-2xl font-bold text-white">
                             ${amount && durationDays
                               ? (parseFloat(amount) * (1 + pool.roi / 100) * (parseInt(durationDays) / pool.durationDays)).toFixed(2)
                               : "0.00"}
@@ -179,7 +179,7 @@ export default function MiningPage() {
           {pools.length === 0 && (
             <Card>
               <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No mining pools available</p>
+                <p className="text-gray-400">No mining pools available</p>
               </CardContent>
             </Card>
           )}
@@ -204,7 +204,7 @@ export default function MiningPage() {
                 <TableBody>
                   {stakings.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center text-gray-400">
                         No staking history
                       </TableCell>
                     </TableRow>
@@ -219,7 +219,7 @@ export default function MiningPage() {
                             className={`px-2 py-1 rounded text-xs ${
                               staking.status === "active"
                                 ? "bg-primary/20 text-primary"
-                                : "bg-muted text-muted-foreground"
+                                : "bg-background-dark text-gray-400"
                             }`}
                           >
                             {staking.status}

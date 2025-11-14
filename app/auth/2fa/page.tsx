@@ -82,7 +82,7 @@ export default function TwoFAPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background-darkest p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -111,7 +111,7 @@ export default function TwoFAPage() {
                     />
                   )}
                 </div>
-                <div className="text-center text-sm text-muted-foreground">
+                <div className="text-center text-sm text-gray-400">
                   <p>Secret: {secret}</p>
                   <p className="mt-2">
                     Scan this QR code with your authenticator app (Google

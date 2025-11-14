@@ -88,7 +88,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background-darkest p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -247,7 +247,7 @@ export default function RegisterPage() {
                 {isLoading ? "Creating account..." : "Create Account"}
               </Button>
 
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-sm text-gray-400">
                 Already have an account?{" "}
                 <Link href="/auth/login" className="text-primary hover:underline">
                   Login

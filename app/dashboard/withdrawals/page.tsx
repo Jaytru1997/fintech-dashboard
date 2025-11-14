@@ -89,8 +89,8 @@ export default function WithdrawalsPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold">Withdrawals</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold text-white">Withdrawals</h1>
+        <p className="text-gray-400 mt-2">
           Request a withdrawal from your account
         </p>
       </div>
@@ -202,7 +202,7 @@ export default function WithdrawalsPage() {
                       placeholder="Enter withdrawal code"
                       required
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-gray-400">
                       Contact support to get your withdrawal code
                     </p>
                   </div>
@@ -235,7 +235,7 @@ export default function WithdrawalsPage() {
                 <TableBody>
                   {withdrawals.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center text-gray-400">
                         No withdrawals found
                       </TableCell>
                     </TableRow>

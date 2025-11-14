@@ -115,8 +115,8 @@ export default function ProfilePage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold">Profile</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-3xl font-bold text-white">Profile</h1>
+        <p className="text-gray-400 mt-2">
           Manage your profile information
         </p>
       </div>
@@ -134,8 +134,8 @@ export default function ProfilePage() {
               }`}
             >
               <input {...getInputProps()} />
-              <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
+              <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <p className="text-sm text-gray-400">
                 {isDragActive
                   ? "Drop the image here"
                   : "Drag & drop an image here, or click to select"}
@@ -209,7 +209,7 @@ export default function ProfilePage() {
           <CardTitle className="text-error">Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-gray-400 mb-4">
             Once you delete your account, there is no going back. Please be
             certain.
           </p>
