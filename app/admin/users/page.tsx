@@ -19,7 +19,13 @@ export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    balances: { main: "", mining: "", trade: "", realEstate: "", referral: "" },
+    balances: { 
+      main: { amount: "", currency: "USD" }, 
+      mining: { amount: "", currency: "USD" }, 
+      trade: { amount: "", currency: "USD" }, 
+      realEstate: { amount: "", currency: "USD" }, 
+      referral: { amount: "", currency: "USD" } 
+    },
     signalStrength: "",
     kycStatus: "pending" as "pending" | "approved" | "rejected",
   });
@@ -29,11 +35,39 @@ export default function AdminUsersPage() {
   }, []);
 
   const loadUsers = async () => {
+    setIsLoading(true);
     try {
-      const data = await adminApi.getUsers();
-      setUsers(data);
-    } catch (error) {
-      toast.error("Failed to load users");
+      const response = await adminApi.getUsers();
+      // Handle different response structures
+      let data = response;
+      if (response && typeof response === 'object' && 'data' in response && Array.isArray(response.data)) {
+        data = response.data;
+      } else if (response && typeof response === 'object' && 'users' in response && Array.isArray(response.users)) {
+        data = response.users;
+      }
+      
+      // Ensure data is always an array and filter out any null/undefined entries
+      const validUsers = Array.isArray(data) 
+        ? data.filter((user): user is AdminUser => {
+            if (!user || typeof user !== 'object') return false;
+            // Check for _id or id field
+            return '_id' in user || 'id' in user;
+          }).map((user) => {
+            // Normalize user object - convert id to _id if needed
+            const userObj = user as any;
+            if (userObj && 'id' in userObj && !('_id' in userObj)) {
+              const { id, ...rest } = userObj;
+              return { ...rest, _id: id } as AdminUser;
+            }
+            return user as AdminUser;
+          })
+        : [];
+      setUsers(validUsers);
+    } catch (error: any) {
+      console.error("Error loading users:", error);
+      toast.error(error.response?.data?.message || error.message || "Failed to load users");
+      // Ensure users is always an array even on error
+      setUsers([]);
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +86,12 @@ export default function AdminUsersPage() {
       }
       const balances: any = {};
       Object.entries(formData.balances).forEach(([key, value]) => {
-        if (value) balances[key] = parseFloat(value);
+        if (value.amount) {
+          balances[key] = {
+            amount: parseFloat(value.amount),
+            currency: value.currency || "USD"
+          };
+        }
       });
       if (Object.keys(balances).length > 0) {
         updateData.balances = balances;
@@ -104,7 +143,7 @@ export default function AdminUsersPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Users</h1>
+        <h1 className="text-2xl font-semibold text-white">Users</h1>
         <p className="text-gray-400 mt-2">
           Manage all platform users
         </p>
@@ -134,25 +173,25 @@ export default function AdminUsersPage() {
                 </TableRow>
               ) : (
                 users.map((user) => (
-                  <TableRow key={user._id}>
+                  <TableRow key={user?._id || 'unknown'}>
                     <TableCell>
-                      {user.firstName} {user.lastName}
+                      {user?.firstName || 'N/A'} {user?.lastName || ''}
                     </TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user?.email || 'N/A'}</TableCell>
                     <TableCell>
                       <span
                         className={`px-2 py-1 rounded text-xs ${
-                          user.kycStatus === "approved"
+                          user?.kycStatus === "approved"
                             ? "bg-green-500/20 text-green-500"
-                            : user.kycStatus === "rejected"
+                            : user?.kycStatus === "rejected"
                             ? "bg-error/20 text-error"
                             : "bg-primary/20 text-primary"
                         }`}
                       >
-                        {user.kycStatus}
+                        {user?.kycStatus || 'pending'}
                       </span>
                     </TableCell>
-                    <TableCell>{user.signalStrength}%</TableCell>
+                    <TableCell>{user?.signalStrength ?? 0}%</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Dialog>
@@ -161,17 +200,33 @@ export default function AdminUsersPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
+                                if (!user?._id) return;
                                 setSelectedUser(user);
                                 setFormData({
                                   balances: {
-                                    main: user.balances?.main?.toString() || "",
-                                    mining: user.balances?.mining?.toString() || "",
-                                    trade: user.balances?.trade?.toString() || "",
-                                    realEstate: user.balances?.realEstate?.toString() || "",
-                                    referral: user.balances?.referral?.toString() || "",
+                                    main: { 
+                                      amount: user?.balances?.main?.amount?.toString() || "", 
+                                      currency: user?.balances?.main?.currency || "USD" 
+                                    },
+                                    mining: { 
+                                      amount: user?.balances?.mining?.amount?.toString() || "", 
+                                      currency: user?.balances?.mining?.currency || "USD" 
+                                    },
+                                    trade: { 
+                                      amount: user?.balances?.trade?.amount?.toString() || "", 
+                                      currency: user?.balances?.trade?.currency || "USD" 
+                                    },
+                                    realEstate: { 
+                                      amount: user?.balances?.realEstate?.amount?.toString() || "", 
+                                      currency: user?.balances?.realEstate?.currency || "USD" 
+                                    },
+                                    referral: { 
+                                      amount: user?.balances?.referral?.amount?.toString() || "", 
+                                      currency: user?.balances?.referral?.currency || "USD" 
+                                    },
                                   },
-                                  signalStrength: user.signalStrength?.toString() || "",
-                                  kycStatus: user.kycStatus,
+                                  signalStrength: (user?.signalStrength ?? 0).toString(),
+                                  kycStatus: user?.kycStatus || "pending",
                                 });
                               }}
                             >
@@ -180,7 +235,7 @@ export default function AdminUsersPage() {
                           </DialogTrigger>
                           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
-                              <DialogTitle>Edit User: {user.firstName} {user.lastName}</DialogTitle>
+                              <DialogTitle>Edit User: {user?.firstName || 'Unknown'} {user?.lastName || ''}</DialogTitle>
                               <DialogDescription>
                                 Update user balances, signal strength, and KYC status
                               </DialogDescription>
@@ -188,76 +243,191 @@ export default function AdminUsersPage() {
                             <div className="space-y-4">
                               <div className="space-y-2">
                                 <Label>Balances</Label>
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Label htmlFor="main">Main</Label>
-                                    <Input
-                                      id="main"
-                                      type="number"
-                                      value={formData.balances.main}
-                                      onChange={(e) =>
-                                        setFormData({
-                                          ...formData,
-                                          balances: { ...formData.balances, main: e.target.value },
-                                        })
-                                      }
-                                    />
+                                <div className="space-y-4">
+                                  <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                      <Label htmlFor="main-amount">Main Amount</Label>
+                                      <Input
+                                        id="main-amount"
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.balances.main.amount}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            balances: { 
+                                              ...formData.balances, 
+                                              main: { ...formData.balances.main, amount: e.target.value }
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="main-currency">Main Currency</Label>
+                                      <Input
+                                        id="main-currency"
+                                        type="text"
+                                        value={formData.balances.main.currency}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            balances: { 
+                                              ...formData.balances, 
+                                              main: { ...formData.balances.main, currency: e.target.value }
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </div>
                                   </div>
-                                  <div>
-                                    <Label htmlFor="mining">Mining</Label>
-                                    <Input
-                                      id="mining"
-                                      type="number"
-                                      value={formData.balances.mining}
-                                      onChange={(e) =>
-                                        setFormData({
-                                          ...formData,
-                                          balances: { ...formData.balances, mining: e.target.value },
-                                        })
-                                      }
-                                    />
+                                  <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                      <Label htmlFor="mining-amount">Mining Amount</Label>
+                                      <Input
+                                        id="mining-amount"
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.balances.mining.amount}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            balances: { 
+                                              ...formData.balances, 
+                                              mining: { ...formData.balances.mining, amount: e.target.value }
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="mining-currency">Mining Currency</Label>
+                                      <Input
+                                        id="mining-currency"
+                                        type="text"
+                                        value={formData.balances.mining.currency}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            balances: { 
+                                              ...formData.balances, 
+                                              mining: { ...formData.balances.mining, currency: e.target.value }
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </div>
                                   </div>
-                                  <div>
-                                    <Label htmlFor="trade">Trade</Label>
-                                    <Input
-                                      id="trade"
-                                      type="number"
-                                      value={formData.balances.trade}
-                                      onChange={(e) =>
-                                        setFormData({
-                                          ...formData,
-                                          balances: { ...formData.balances, trade: e.target.value },
-                                        })
-                                      }
-                                    />
+                                  <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                      <Label htmlFor="trade-amount">Trade Amount</Label>
+                                      <Input
+                                        id="trade-amount"
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.balances.trade.amount}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            balances: { 
+                                              ...formData.balances, 
+                                              trade: { ...formData.balances.trade, amount: e.target.value }
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="trade-currency">Trade Currency</Label>
+                                      <Input
+                                        id="trade-currency"
+                                        type="text"
+                                        value={formData.balances.trade.currency}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            balances: { 
+                                              ...formData.balances, 
+                                              trade: { ...formData.balances.trade, currency: e.target.value }
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </div>
                                   </div>
-                                  <div>
-                                    <Label htmlFor="realEstate">Real Estate</Label>
-                                    <Input
-                                      id="realEstate"
-                                      type="number"
-                                      value={formData.balances.realEstate}
-                                      onChange={(e) =>
-                                        setFormData({
-                                          ...formData,
-                                          balances: { ...formData.balances, realEstate: e.target.value },
-                                        })
-                                      }
-                                    />
+                                  <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                      <Label htmlFor="realEstate-amount">Real Estate Amount</Label>
+                                      <Input
+                                        id="realEstate-amount"
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.balances.realEstate.amount}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            balances: { 
+                                              ...formData.balances, 
+                                              realEstate: { ...formData.balances.realEstate, amount: e.target.value }
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="realEstate-currency">Real Estate Currency</Label>
+                                      <Input
+                                        id="realEstate-currency"
+                                        type="text"
+                                        value={formData.balances.realEstate.currency}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            balances: { 
+                                              ...formData.balances, 
+                                              realEstate: { ...formData.balances.realEstate, currency: e.target.value }
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </div>
                                   </div>
-                                  <div>
-                                    <Label htmlFor="referral">Referral</Label>
-                                    <Input
-                                      id="referral"
-                                      type="number"
-                                      value={formData.balances.referral}
-                                      onChange={(e) =>
-                                        setFormData({
-                                          ...formData,
-                                          balances: { ...formData.balances, referral: e.target.value },
-                                        })
-                                      }
-                                    />
+                                  <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                      <Label htmlFor="referral-amount">Referral Amount</Label>
+                                      <Input
+                                        id="referral-amount"
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.balances.referral.amount}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            balances: { 
+                                              ...formData.balances, 
+                                              referral: { ...formData.balances.referral, amount: e.target.value }
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="referral-currency">Referral Currency</Label>
+                                      <Input
+                                        id="referral-currency"
+                                        type="text"
+                                        value={formData.balances.referral.currency}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            balances: { 
+                                              ...formData.balances, 
+                                              referral: { ...formData.balances.referral, currency: e.target.value }
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -298,7 +468,7 @@ export default function AdminUsersPage() {
                             </div>
                           </DialogContent>
                         </Dialog>
-                        {user.kycStatus === "pending" && (
+                        {user?.kycStatus === "pending" && user?._id && (
                           <>
                             <Button
                               variant="outline"

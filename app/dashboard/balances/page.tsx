@@ -30,6 +30,20 @@ export default function BalancesPage() {
   }, []);
 
   const loadBalances = async () => {
+    // If balances are already available from login, use them and skip API call
+    if (balances) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Also check if balances are in user object from auth store
+    if (user?.balances) {
+      setBalances(user.balances);
+      setIsLoading(false);
+      return;
+    }
+
+    // Only fetch if balances are not available
     try {
       const balancesData = await userApi.getBalances();
       setBalances(balancesData);
@@ -64,31 +78,36 @@ export default function BalancesPage() {
   const balanceCards = [
     {
       title: "Main Balance",
-      value: balances?.main || 0,
+      amount: balances?.main?.amount || 0,
+      currency: balances?.main?.currency || "USD",
       icon: Wallet,
       color: "text-blue",
     },
     {
       title: "Mining Balance",
-      value: balances?.mining || 0,
+      amount: balances?.mining?.amount || 0,
+      currency: balances?.mining?.currency || "USD",
       icon: Activity,
       color: "text-primary",
     },
     {
       title: "Trade Balance",
-      value: balances?.trade || 0,
+      amount: balances?.trade?.amount || 0,
+      currency: balances?.trade?.currency || "USD",
       icon: TrendingUp,
       color: "text-purple",
     },
     {
       title: "Real Estate",
-      value: balances?.realEstate || 0,
+      amount: balances?.realEstate?.amount || 0,
+      currency: balances?.realEstate?.currency || "USD",
       icon: Building2,
       color: "text-primary-dark",
     },
     {
       title: "Referral",
-      value: balances?.referral || 0,
+      amount: balances?.referral?.amount || 0,
+      currency: balances?.referral?.currency || "USD",
       icon: Users,
       color: "text-blue-sky",
     },
@@ -103,15 +122,15 @@ export default function BalancesPage() {
     >
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white">Balances</h1>
+          <h1 className="text-2xl font-semibold text-white">Balances</h1>
           <p className="text-gray-400 mt-2">
             View and manage your account balances
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-300">Currency:</span>
+          <span className="text-xs text-gray-300">Default Currency:</span>
           <Select
-            value={user?.currency || "USD"}
+            value={balances?.main?.currency || user?.currency || "USD"}
             onValueChange={handleCurrencyChange}
             disabled={isUpdating}
           >
@@ -147,8 +166,8 @@ export default function BalancesPage() {
                   <Icon className={`h-5 w-5 ${card.color}`} />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {card.value.toLocaleString()} {user?.currency || "USD"}
+                  <div className="text-xl font-bold">
+                    {card.amount.toLocaleString()} {card.currency}
                   </div>
                 </CardContent>
               </Card>

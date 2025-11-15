@@ -1,6 +1,6 @@
 # Fintech Dashboard
 
-A complete, production-ready Next.js (TypeScript) frontend for a fintech dashboard that communicates with a NestJS/Mongoose backend API. The frontend integrates all backend endpoints, features a modern UI with responsive design, and includes robust state management, smooth animations, error handling, and best practices for performance, accessibility, and maintainability.
+Frontend for a fintech dashboard that communicates with a NestJS/Mongoose backend API. The frontend integrates all backend endpoints, features a modern UI with responsive design, and includes robust state management, smooth animations, error handling, and best practices for performance, accessibility, and maintainability.
 
 ## Features
 
@@ -44,7 +44,7 @@ A complete, production-ready Next.js (TypeScript) frontend for a fintech dashboa
 ## Prerequisites
 
 - Node.js 18+ and npm/yarn/pnpm
-- Backend API running at `http://localhost:3000` (configurable)
+- Backend API running at `http://localhost:10000` (configurable)
 
 ## Installation
 
@@ -79,7 +79,7 @@ A complete, production-ready Next.js (TypeScript) frontend for a fintech dashboa
    ```
 
 5. **Open your browser**:
-   Navigate to [http://localhost:3001](http://localhost:3001) (or the port shown in the terminal)
+   Navigate to [http://localhost:3000](http://localhost:3000) (or the port shown in the terminal)
 
 ## Project Structure
 

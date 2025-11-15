@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -22,14 +23,14 @@ import { useRouter } from "next/navigation";
 
 const userNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/deposits", label: "Deposit", icon: ArrowDownCircle },
+  { href: "/dashboard/withdrawals", label: "Withdrawal", icon: ArrowUpCircle },
   { href: "/dashboard/balances", label: "Balances", icon: Wallet },
   { href: "/dashboard/subscriptions", label: "Subscriptions", icon: CreditCard },
   { href: "/dashboard/signal", label: "Signal", icon: TrendingUp },
   { href: "/dashboard/mining", label: "Mining", icon: Activity },
   { href: "/dashboard/trading", label: "Trading", icon: TrendingUp },
   { href: "/dashboard/real-estate", label: "Real Estate", icon: Building2 },
-  { href: "/dashboard/deposits", label: "Deposits", icon: ArrowDownCircle },
-  { href: "/dashboard/withdrawals", label: "Withdrawals", icon: ArrowUpCircle },
   { href: "/dashboard/copy-trading", label: "Copy Trading", icon: Copy },
   { href: "/dashboard/profile", label: "Profile", icon: User },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
@@ -63,9 +64,15 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-background-dark border-r border-gray-800 flex flex-col">
-      <div className="flex h-16 items-center border-b border-gray-800 px-6">
-        <h1 className="text-xl font-bold text-white">Fintech Dashboard</h1>
+    <aside className="hidden lg:flex fixed left-0 top-0 z-40 h-screen w-64 bg-background-dark shadow-lg flex-col">
+      <div className="flex h-16 items-center gap-3 px-6 shadow-sm">
+        <Image
+          src="/assets/fintech.svg"
+          alt="Fintech Logo"
+          width={32}
+          height={32}
+          className="flex-shrink-0"
+        />
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
         {navItems.map((item) => {
@@ -76,7 +83,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-colors",
                 isActive
                   ? "bg-primary text-white"
                   : "text-gray-300 hover:bg-gray-800 hover:text-white"
@@ -88,10 +95,10 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className="border-t border-gray-800 p-4">
+      <div className="p-4 shadow-sm">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
         >
           <LogOut className="h-5 w-5" />
           Logout

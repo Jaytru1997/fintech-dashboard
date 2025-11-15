@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { authApi } from "@/lib/api/endpoints";
 import { useAuthStore } from "@/stores/auth";
+import { useUserStore } from "@/stores/user";
 import { toast } from "react-toastify";
 import Link from "next/link";
 
@@ -61,6 +63,7 @@ const countries = [
 export default function RegisterPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
+  const { setBalances } = useUserStore();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -77,7 +80,13 @@ export default function RegisterPage() {
     setIsLoading(true);
     try {
       const response = await authApi.register(data);
-      setAuth(response.token, response.user, false);
+      setAuth(response.data.token, response.data.user, response.data.user.isAdmin || false);
+      
+      // Extract and store balances from user object if available
+      if (response.data.user.balances) {
+        setBalances(response.data.user.balances);
+      }
+      
       toast.success("Registration successful!");
       router.push("/dashboard");
     } catch (error: any) {
@@ -97,8 +106,17 @@ export default function RegisterPage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-            <CardDescription>
+            <div className="flex items-center justify-center mb-4">
+              <Image
+                src="/assets/fintech.svg"
+                alt="Fintech Logo"
+                width={48}
+                height={48}
+                className="flex-shrink-0"
+              />
+            </div>
+            <CardTitle className="text-xl font-semibold text-center">Create Account</CardTitle>
+            <CardDescription className="text-center">
               Fill in your details to create a new account
             </CardDescription>
           </CardHeader>

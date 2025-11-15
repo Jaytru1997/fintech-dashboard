@@ -26,9 +26,12 @@ export default function SubscriptionsPage() {
   const loadPlans = async () => {
     try {
       const data = await userApi.getSubscriptionPlans();
-      setPlans(data);
+      // Ensure data is always an array
+      setPlans(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error("Failed to load subscription plans");
+      // Ensure plans is always an array even on error
+      setPlans([]);
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +71,7 @@ export default function SubscriptionsPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Subscription Plans</h1>
+        <h1 className="text-2xl font-semibold text-white">Subscription Plans</h1>
         <p className="text-gray-400 mt-2">
           Choose a subscription plan that fits your needs
         </p>

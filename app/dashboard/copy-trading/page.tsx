@@ -20,9 +20,12 @@ export default function CopyTradingPage() {
   const loadTraders = async () => {
     try {
       const data = await userApi.getCopyTraders();
-      setTraders(data);
+      // Ensure data is always an array
+      setTraders(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error("Failed to load copy traders");
+      // Ensure traders is always an array even on error
+      setTraders([]);
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +67,7 @@ export default function CopyTradingPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Copy Trading</h1>
+        <h1 className="text-2xl font-semibold text-white">Copy Trading</h1>
         <p className="text-gray-400 mt-2">
           Follow experienced traders and copy their trades automatically
         </p>

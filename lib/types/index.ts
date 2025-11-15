@@ -12,6 +12,7 @@ export interface User {
   kycStatus: "pending" | "approved" | "rejected";
   twoFactorEnabled: boolean;
   isAdmin: boolean;
+  balances?: Balances;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,11 +52,11 @@ export interface TwoFASetupResponse {
 
 // Balance Types
 export interface Balances {
-  main: number;
-  mining: number;
-  trade: number;
-  realEstate: number;
-  referral: number;
+  main: {amount: number; currency: string};
+  mining: {amount: number; currency: string};
+  trade: {amount: number; currency: string};
+  realEstate: {amount: number; currency: string};
+  referral: {amount: number; currency: string};
 }
 
 // Transaction Types

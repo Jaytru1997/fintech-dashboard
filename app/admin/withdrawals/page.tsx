@@ -19,20 +19,45 @@ export default function AdminWithdrawalsPage() {
   }, []);
 
   const loadWithdrawals = async () => {
+    setIsLoading(true);
     try {
-      const data = await adminApi.getWithdrawals();
-      setWithdrawals(data);
-    } catch (error) {
-      toast.error("Failed to load withdrawals");
+      const response = await adminApi.getWithdrawals();
+      // Handle different response structures
+      let data = response;
+      if (response && typeof response === 'object' && 'data' in response && Array.isArray(response.data)) {
+        data = response.data;
+      } else if (response && typeof response === 'object' && 'withdrawals' in response && Array.isArray(response.withdrawals)) {
+        data = response.withdrawals;
+      }
+      
+      // Ensure data is always an array and filter out any null/undefined entries
+      const validWithdrawals = Array.isArray(data) 
+        ? data.filter((withdrawal): withdrawal is Withdrawal => withdrawal != null && typeof withdrawal === 'object' && ('_id' in withdrawal || 'id' in withdrawal))
+          .map((withdrawal: any) => {
+            if ('id' in withdrawal && !('_id' in withdrawal)) {
+              const { id, ...rest } = withdrawal;
+              return { ...rest, _id: id } as Withdrawal;
+            }
+            return withdrawal as Withdrawal;
+          })
+        : [];
+      setWithdrawals(validWithdrawals);
+    } catch (error: any) {
+      console.error("Error loading withdrawals:", error);
+      toast.error(error.response?.data?.message || error.message || "Failed to load withdrawals");
+      // Ensure withdrawals is always an array even on error
+      setWithdrawals([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGenerateCode = async (id: string) => {
+    if (!id) return;
     try {
       const response = await adminApi.generateWithdrawalCode(id);
-      toast.success(`Withdrawal code: ${response.code}`);
+      const code = response?.code || 'N/A';
+      toast.success(`Withdrawal code: ${code}`);
       loadWithdrawals();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to generate code");
@@ -65,7 +90,7 @@ export default function AdminWithdrawalsPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Withdrawals</h1>
+        <h1 className="text-2xl font-semibold text-white">Withdrawals</h1>
         <p className="text-gray-400 mt-2">
           Review and manage withdrawal requests
         </p>
@@ -97,30 +122,30 @@ export default function AdminWithdrawalsPage() {
                 </TableRow>
               ) : (
                 withdrawals.map((withdrawal) => (
-                  <TableRow key={withdrawal._id}>
-                    <TableCell>{withdrawal.method}</TableCell>
-                    <TableCell>{withdrawal.amount.toLocaleString()}</TableCell>
-                    <TableCell>{withdrawal.currency}</TableCell>
-                    <TableCell className="max-w-xs truncate">{withdrawal.details}</TableCell>
+                  <TableRow key={withdrawal?._id || 'unknown'}>
+                    <TableCell>{withdrawal?.method || 'N/A'}</TableCell>
+                    <TableCell>{(withdrawal?.amount ?? 0).toLocaleString()}</TableCell>
+                    <TableCell>{withdrawal?.currency || 'N/A'}</TableCell>
+                    <TableCell className="max-w-xs truncate">{withdrawal?.details || 'N/A'}</TableCell>
                     <TableCell>
                       <span
                         className={`px-2 py-1 rounded text-xs ${
-                          withdrawal.status === "approved"
+                          withdrawal?.status === "approved"
                             ? "bg-green-500/20 text-green-500"
-                            : withdrawal.status === "rejected"
+                            : withdrawal?.status === "rejected"
                             ? "bg-error/20 text-error"
                             : "bg-primary/20 text-primary"
                         }`}
                       >
-                        {withdrawal.status}
+                        {withdrawal?.status || 'pending'}
                       </span>
                     </TableCell>
                     <TableCell>
-                      {new Date(withdrawal.createdAt).toLocaleDateString()}
+                      {withdrawal?.createdAt ? new Date(withdrawal.createdAt).toLocaleDateString() : 'N/A'}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {!withdrawal.withdrawalCode && (
+                        {!withdrawal?.withdrawalCode && withdrawal?._id && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -129,7 +154,7 @@ export default function AdminWithdrawalsPage() {
                             <Key className="h-4 w-4" />
                           </Button>
                         )}
-                        {withdrawal.status === "pending" && (
+                        {withdrawal?.status === "pending" && withdrawal?._id && (
                           <>
                             <Button
                               variant="outline"

@@ -6,12 +6,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { authApi } from "@/lib/api/endpoints";
 import { useAuthStore } from "@/stores/auth";
+import { useUserStore } from "@/stores/user";
 import { toast } from "react-toastify";
 import Link from "next/link";
 
@@ -25,6 +27,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
+  const { setBalances } = useUserStore();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -44,6 +47,12 @@ export default function LoginPage() {
     try {
       const response = await authApi.login(data);
       setAuth(response.data.token, response.data.user, response.data.user.isAdmin || false);
+      
+      // Extract and store balances from user object if available
+      if (response.data.user.balances) {
+        setBalances(response.data.user.balances);
+      }
+      
       toast.success("Login successful!");
       router.push(response.data.user?.isAdmin ? "/admin" : "/dashboard");
     } catch (error: any) {
@@ -63,8 +72,17 @@ export default function LoginPage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">Login</CardTitle>
-            <CardDescription>
+            <div className="flex items-center justify-center mb-4">
+              <Image
+                src="/assets/fintech.svg"
+                alt="Fintech Logo"
+                width={48}
+                height={48}
+                className="flex-shrink-0"
+              />
+            </div>
+            <CardTitle className="text-xl font-semibold text-center">Login</CardTitle>
+            <CardDescription className="text-center">
               Enter your credentials to access your account
             </CardDescription>
           </CardHeader>

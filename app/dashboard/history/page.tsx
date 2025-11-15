@@ -32,13 +32,20 @@ export default function HistoryPage() {
           userApi.getStakings(),
           userApi.getRealEstateInvestments(),
         ]);
-      setTrades(tradesData);
-      setDeposits(depositsData);
-      setWithdrawals(withdrawalsData);
-      setStakings(stakingsData);
-      setInvestments(investmentsData);
+      // Ensure all data is always an array
+      setTrades(Array.isArray(tradesData) ? tradesData : []);
+      setDeposits(Array.isArray(depositsData) ? depositsData : []);
+      setWithdrawals(Array.isArray(withdrawalsData) ? withdrawalsData : []);
+      setStakings(Array.isArray(stakingsData) ? stakingsData : []);
+      setInvestments(Array.isArray(investmentsData) ? investmentsData : []);
     } catch (error) {
       toast.error("Failed to load history");
+      // Ensure all arrays are initialized even on error
+      setTrades([]);
+      setDeposits([]);
+      setWithdrawals([]);
+      setStakings([]);
+      setInvestments([]);
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +67,7 @@ export default function HistoryPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2 text-white">
+        <h1 className="text-2xl font-semibold flex items-center gap-2 text-white">
           <History className="h-8 w-8" />
           Transaction History
         </h1>

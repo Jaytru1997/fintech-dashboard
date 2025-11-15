@@ -39,10 +39,14 @@ export default function WithdrawalsPage() {
         userApi.getWithdrawals(),
         userApi.getWithdrawalMethods(),
       ]);
-      setWithdrawals(withdrawalsData);
-      setMethods(methodsData);
+      // Ensure all data is always an array
+      setWithdrawals(Array.isArray(withdrawalsData) ? withdrawalsData : []);
+      setMethods(Array.isArray(methodsData) ? methodsData : []);
     } catch (error) {
       toast.error("Failed to load withdrawal data");
+      // Ensure all arrays are initialized even on error
+      setWithdrawals([]);
+      setMethods([]);
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +93,7 @@ export default function WithdrawalsPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Withdrawals</h1>
+        <h1 className="text-2xl font-semibold text-white">Withdrawals</h1>
         <p className="text-gray-400 mt-2">
           Request a withdrawal from your account
         </p>

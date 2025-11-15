@@ -37,10 +37,14 @@ export default function DepositsPage() {
         userApi.getDeposits(),
         userApi.getDepositMethods(),
       ]);
-      setDeposits(depositsData);
-      setMethods(methodsData);
+      // Ensure all data is always an array
+      setDeposits(Array.isArray(depositsData) ? depositsData : []);
+      setMethods(Array.isArray(methodsData) ? methodsData : []);
     } catch (error) {
       toast.error("Failed to load deposit data");
+      // Ensure all arrays are initialized even on error
+      setDeposits([]);
+      setMethods([]);
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +106,7 @@ export default function DepositsPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Deposits</h1>
+        <h1 className="text-2xl font-semibold text-white">Deposits</h1>
         <p className="text-gray-400 mt-2">
           Make a deposit to fund your account
         </p>

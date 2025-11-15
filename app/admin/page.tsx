@@ -21,21 +21,30 @@ export default function AdminDashboardPage() {
   }, []);
 
   const loadStats = async () => {
+    setIsLoading(true);
     try {
       const [users, deposits, withdrawals, trades] = await Promise.all([
-        adminApi.getUsers(),
-        adminApi.getDeposits(),
-        adminApi.getWithdrawals(),
-        adminApi.getTrades(),
+        adminApi.getUsers().catch(() => []),
+        adminApi.getDeposits().catch(() => []),
+        adminApi.getWithdrawals().catch(() => []),
+        adminApi.getTrades().catch(() => []),
       ]);
+      // Ensure all data is arrays before accessing length and filter out null/undefined
       setStats({
-        users: users.length,
-        deposits: deposits.length,
-        withdrawals: withdrawals.length,
-        trades: trades.length,
+        users: Array.isArray(users) ? users.filter(u => u != null).length : 0,
+        deposits: Array.isArray(deposits) ? deposits.filter(d => d != null).length : 0,
+        withdrawals: Array.isArray(withdrawals) ? withdrawals.filter(w => w != null).length : 0,
+        trades: Array.isArray(trades) ? trades.filter(t => t != null).length : 0,
       });
-    } catch (error) {
-      toast.error("Failed to load dashboard stats");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to load dashboard stats");
+      // Reset stats to 0 on error
+      setStats({
+        users: 0,
+        deposits: 0,
+        withdrawals: 0,
+        trades: 0,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +66,7 @@ export default function AdminDashboardPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+        <h1 className="text-2xl font-semibold text-white">Admin Dashboard</h1>
         <p className="text-gray-400 mt-2">
           Overview of platform statistics and activities
         </p>
@@ -70,7 +79,7 @@ export default function AdminDashboardPage() {
             <Users className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{stats.users}</div>
+            <div className="text-xl font-bold text-white">{stats.users}</div>
           </CardContent>
         </Card>
 
@@ -80,7 +89,7 @@ export default function AdminDashboardPage() {
             <ArrowDownCircle className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{stats.deposits}</div>
+            <div className="text-xl font-bold text-white">{stats.deposits}</div>
           </CardContent>
         </Card>
 
@@ -90,7 +99,7 @@ export default function AdminDashboardPage() {
             <ArrowUpCircle className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{stats.withdrawals}</div>
+            <div className="text-xl font-bold text-white">{stats.withdrawals}</div>
           </CardContent>
         </Card>
 
@@ -100,7 +109,7 @@ export default function AdminDashboardPage() {
             <TrendingUp className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{stats.trades}</div>
+            <div className="text-xl font-bold text-white">{stats.trades}</div>
           </CardContent>
         </Card>
       </div>

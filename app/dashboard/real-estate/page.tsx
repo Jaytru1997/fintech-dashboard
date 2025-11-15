@@ -34,10 +34,14 @@ export default function RealEstatePage() {
         userApi.getRealEstate(),
         userApi.getRealEstateInvestments(),
       ]);
-      setProperties(propertiesData);
-      setInvestments(investmentsData);
+      // Ensure all data is always an array
+      setProperties(Array.isArray(propertiesData) ? propertiesData : []);
+      setInvestments(Array.isArray(investmentsData) ? investmentsData : []);
     } catch (error) {
       toast.error("Failed to load real estate data");
+      // Ensure all arrays are initialized even on error
+      setProperties([]);
+      setInvestments([]);
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +84,7 @@ export default function RealEstatePage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Real Estate</h1>
+        <h1 className="text-2xl font-semibold text-white">Real Estate</h1>
         <p className="text-gray-400 mt-2">
           Invest in real estate portfolios and earn passive income
         </p>

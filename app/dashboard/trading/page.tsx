@@ -41,9 +41,12 @@ export default function TradingPage() {
   const loadTrades = async () => {
     try {
       const data = await userApi.getTrades();
-      setTrades(data);
+      // Ensure data is always an array
+      setTrades(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error("Failed to load trades");
+      // Ensure trades is always an array even on error
+      setTrades([]);
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +100,7 @@ export default function TradingPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Trading</h1>
+        <h1 className="text-2xl font-semibold text-white">Trading</h1>
         <p className="text-gray-400 mt-2">
           Execute trades and manage your trading portfolio
         </p>

@@ -34,10 +34,14 @@ export default function MiningPage() {
         userApi.getMiningPools(),
         userApi.getStakings(),
       ]);
-      setPools(poolsData);
-      setStakings(stakingsData);
+      // Ensure all data is always an array
+      setPools(Array.isArray(poolsData) ? poolsData : []);
+      setStakings(Array.isArray(stakingsData) ? stakingsData : []);
     } catch (error) {
       toast.error("Failed to load mining data");
+      // Ensure all arrays are initialized even on error
+      setPools([]);
+      setStakings([]);
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +84,7 @@ export default function MiningPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Mining Pools</h1>
+        <h1 className="text-2xl font-semibold text-white">Mining Pools</h1>
         <p className="text-gray-400 mt-2">
           Stake in mining pools to earn passive income
         </p>

@@ -12,6 +12,7 @@ import { userApi } from "@/lib/api/endpoints";
 import { SignalPrice } from "@/lib/types";
 import { toast } from "react-toastify";
 import { TrendingUp } from "lucide-react";
+import { SignalStrengthBar } from "@/components/ui/SignalStrengthBar";
 
 export default function SignalPage() {
   const { user, updateUser } = useAuthStore();
@@ -28,9 +29,12 @@ export default function SignalPage() {
   const loadSignalPrices = async () => {
     try {
       const data = await userApi.getSignalPrices();
-      setSignalPrices(data);
+      // Ensure data is always an array
+      setSignalPrices(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error("Failed to load signal prices");
+      // Ensure signalPrices is always an array even on error
+      setSignalPrices([]);
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +77,7 @@ export default function SignalPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Signal Strength</h1>
+        <h1 className="text-2xl font-semibold text-white">Signal Strength</h1>
         <p className="text-gray-400 mt-2">
           Purchase signal strength to improve your trading performance
         </p>
@@ -89,20 +93,15 @@ export default function SignalPage() {
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-white">{user?.signalStrength || 0}%</span>
+              <span className="text-xl font-bold text-white">{user?.signalStrength || 0}%</span>
             </div>
-            <div className="w-full bg-gray-800 rounded-full h-4">
-              <div
-                className="bg-primary h-4 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(user?.signalStrength || 0, 100)}%` }}
-              />
-            </div>
+            <SignalStrengthBar value={user?.signalStrength || 0} />
           </div>
         </CardContent>
       </Card>
 
       <div>
-        <h2 className="text-2xl font-semibold mb-4 text-white">Purchase Signal Strength</h2>
+        <h2 className="text-lg font-semibold mb-4 text-white">Purchase Signal Strength</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {signalPrices.map((price) => (
             <Card key={price._id} className="hover:shadow-lg transition-shadow">
@@ -143,7 +142,7 @@ export default function SignalPage() {
                       </div>
                       <div className="p-4 bg-background-dark rounded-lg">
                         <p className="text-sm text-gray-400">Total Amount:</p>
-                        <p className="text-2xl font-bold text-white">
+                        <p className="text-xl font-bold text-white">
                           ${amount ? (parseFloat(amount) * price.amount).toFixed(2) : "0.00"}
                         </p>
                         <p className="text-sm text-gray-400 mt-2">

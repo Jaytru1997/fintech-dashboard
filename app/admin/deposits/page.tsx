@@ -19,11 +19,34 @@ export default function AdminDepositsPage() {
   }, []);
 
   const loadDeposits = async () => {
+    setIsLoading(true);
     try {
-      const data = await adminApi.getDeposits();
-      setDeposits(data);
-    } catch (error) {
-      toast.error("Failed to load deposits");
+      const response = await adminApi.getDeposits();
+      // Handle different response structures
+      let data = response;
+      if (response && typeof response === 'object' && 'data' in response && Array.isArray(response.data)) {
+        data = response.data;
+      } else if (response && typeof response === 'object' && 'deposits' in response && Array.isArray(response.deposits)) {
+        data = response.deposits;
+      }
+      
+      // Ensure data is always an array and filter out any null/undefined entries
+      const validDeposits = Array.isArray(data) 
+        ? data.filter((deposit): deposit is Deposit => deposit != null && typeof deposit === 'object' && ('_id' in deposit || 'id' in deposit))
+          .map((deposit: any) => {
+            if ('id' in deposit && !('_id' in deposit)) {
+              const { id, ...rest } = deposit;
+              return { ...rest, _id: id } as Deposit;
+            }
+            return deposit as Deposit;
+          })
+        : [];
+      setDeposits(validDeposits);
+    } catch (error: any) {
+      console.error("Error loading deposits:", error);
+      toast.error(error.response?.data?.message || error.message || "Failed to load deposits");
+      // Ensure deposits is always an array even on error
+      setDeposits([]);
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +78,7 @@ export default function AdminDepositsPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Deposits</h1>
+        <h1 className="text-2xl font-semibold text-white">Deposits</h1>
         <p className="text-gray-400 mt-2">
           Review and manage deposit requests
         </p>
@@ -86,28 +109,28 @@ export default function AdminDepositsPage() {
                 </TableRow>
               ) : (
                 deposits.map((deposit) => (
-                  <TableRow key={deposit._id}>
-                    <TableCell>{deposit.method}</TableCell>
-                    <TableCell>{deposit.amount.toLocaleString()}</TableCell>
-                    <TableCell>{deposit.currency}</TableCell>
+                  <TableRow key={deposit?._id || 'unknown'}>
+                    <TableCell>{deposit?.method || 'N/A'}</TableCell>
+                    <TableCell>{(deposit?.amount ?? 0).toLocaleString()}</TableCell>
+                    <TableCell>{deposit?.currency || 'N/A'}</TableCell>
                     <TableCell>
                       <span
                         className={`px-2 py-1 rounded text-xs ${
-                          deposit.status === "approved"
+                          deposit?.status === "approved"
                             ? "bg-green-500/20 text-green-500"
-                            : deposit.status === "rejected"
+                            : deposit?.status === "rejected"
                             ? "bg-error/20 text-error"
                             : "bg-primary/20 text-primary"
                         }`}
                       >
-                        {deposit.status}
+                        {deposit?.status || 'pending'}
                       </span>
                     </TableCell>
                     <TableCell>
-                      {new Date(deposit.createdAt).toLocaleDateString()}
+                      {deposit?.createdAt ? new Date(deposit.createdAt).toLocaleDateString() : 'N/A'}
                     </TableCell>
                     <TableCell>
-                      {deposit.status === "pending" && (
+                      {deposit?.status === "pending" && deposit?._id && (
                         <div className="flex items-center gap-2">
                           <Button
                             variant="outline"

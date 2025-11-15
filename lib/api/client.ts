@@ -3,7 +3,7 @@ import { useAuthStore } from "@/stores/auth";
 import { toast } from "react-toastify";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:10000",
   headers: {
     "Content-Type": "application/json",
   },
@@ -33,12 +33,16 @@ api.interceptors.response.use(
         error.response.data?.message || "An error occurred";
 
       if (status === 401) {
-        // Unauthorized - clear auth and redirect to login
-        useAuthStore.getState().clearAuth();
-        if (typeof window !== "undefined") {
-          window.location.href = "/auth/login";
+        // Only clear auth if we have a token (to avoid clearing during initial hydration)
+        const authState = useAuthStore.getState();
+        if (authState.token) {
+          // Unauthorized - clear auth and redirect to login
+          authState.clearAuth();
+          if (typeof window !== "undefined") {
+            window.location.href = "/auth/login";
+          }
+          toast.error("Session expired. Please login again.");
         }
-        toast.error("Session expired. Please login again.");
       } else if (status === 403) {
         toast.error("You don't have permission to perform this action.");
       } else if (status >= 500) {

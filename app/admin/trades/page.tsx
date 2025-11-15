@@ -27,18 +27,41 @@ export default function AdminTradesPage() {
   }, []);
 
   const loadTrades = async () => {
+    setIsLoading(true);
     try {
-      const data = await adminApi.getTrades();
-      setTrades(data);
-    } catch (error) {
-      toast.error("Failed to load trades");
+      const response = await adminApi.getTrades();
+      // Handle different response structures
+      let data = response;
+      if (response && typeof response === 'object' && 'data' in response && Array.isArray(response.data)) {
+        data = response.data;
+      } else if (response && typeof response === 'object' && 'trades' in response && Array.isArray(response.trades)) {
+        data = response.trades;
+      }
+      
+      // Ensure data is always an array and filter out any null/undefined entries
+      const validTrades = Array.isArray(data) 
+        ? data.filter((trade): trade is Trade => trade != null && typeof trade === 'object' && ('_id' in trade || 'id' in trade))
+          .map((trade: any) => {
+            if ('id' in trade && !('_id' in trade)) {
+              const { id, ...rest } = trade;
+              return { ...rest, _id: id } as Trade;
+            }
+            return trade as Trade;
+          })
+        : [];
+      setTrades(validTrades);
+    } catch (error: any) {
+      console.error("Error loading trades:", error);
+      toast.error(error.response?.data?.message || error.message || "Failed to load trades");
+      // Ensure trades is always an array even on error
+      setTrades([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleUpdateTrade = async () => {
-    if (!selectedTrade) return;
+    if (!selectedTrade?._id) return;
     setIsSubmitting(true);
     try {
       const updateData: any = {};
@@ -71,7 +94,7 @@ export default function AdminTradesPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Trades</h1>
+        <h1 className="text-2xl font-semibold text-white">Trades</h1>
         <p className="text-gray-400 mt-2">
           Manage all platform trades
         </p>
@@ -104,26 +127,26 @@ export default function AdminTradesPage() {
                 </TableRow>
               ) : (
                 trades.map((trade) => (
-                  <TableRow key={trade._id}>
-                    <TableCell>{trade.tradeType}</TableCell>
-                    <TableCell>{trade.pair}</TableCell>
-                    <TableCell>${trade.amount.toLocaleString()}</TableCell>
-                    <TableCell>{trade.direction.toUpperCase()}</TableCell>
+                  <TableRow key={trade?._id || 'unknown'}>
+                    <TableCell>{trade?.tradeType || 'N/A'}</TableCell>
+                    <TableCell>{trade?.pair || 'N/A'}</TableCell>
+                    <TableCell>${(trade?.amount ?? 0).toLocaleString()}</TableCell>
+                    <TableCell>{(trade?.direction || '').toUpperCase()}</TableCell>
                     <TableCell>
                       <span
                         className={`px-2 py-1 rounded text-xs ${
-                          trade.status === "active"
+                          trade?.status === "active"
                             ? "bg-primary/20 text-primary"
-                            : trade.status === "completed"
+                            : trade?.status === "completed"
                             ? "bg-green-500/20 text-green-500"
                             : "bg-background-dark text-gray-400"
                         }`}
                       >
-                        {trade.status}
+                        {trade?.status || 'pending'}
                       </span>
                     </TableCell>
                     <TableCell>
-                      {trade.result && (
+                      {trade?.result && (
                         <span
                           className={`px-2 py-1 rounded text-xs ${
                             trade.result === "win"
@@ -136,7 +159,7 @@ export default function AdminTradesPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {new Date(trade.createdAt).toLocaleDateString()}
+                      {trade?.createdAt ? new Date(trade.createdAt).toLocaleDateString() : 'N/A'}
                     </TableCell>
                     <TableCell>
                       <Dialog>
@@ -145,10 +168,11 @@ export default function AdminTradesPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
+                              if (!trade?._id) return;
                               setSelectedTrade(trade);
                               setFormData({
-                                status: trade.status,
-                                result: trade.result || "",
+                                status: trade?.status || "",
+                                result: trade?.result || "",
                               });
                             }}
                           >

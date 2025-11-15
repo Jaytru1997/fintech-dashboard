@@ -10,6 +10,7 @@ import { userApi } from "@/lib/api/endpoints";
 import { Wallet, TrendingUp, Activity, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-toastify";
+import { SignalStrengthBar } from "@/components/ui/SignalStrengthBar";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -21,6 +22,20 @@ export default function DashboardPage() {
   }, []);
 
   const loadData = async () => {
+    // If balances are already available from login, use them and skip API call
+    if (balances) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Also check if balances are in user object from auth store
+    if (user?.balances) {
+      setBalances(user.balances);
+      setIsLoading(false);
+      return;
+    }
+
+    // Only fetch if balances are not available
     try {
       const balancesData = await userApi.getBalances();
       setBalances(balancesData);
@@ -47,7 +62,7 @@ export default function DashboardPage() {
       className="space-y-6"
     >
       <div>
-        <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+        <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
         <p className="text-gray-400 mt-2">
           Welcome back, {user?.firstName}!
         </p>
@@ -60,8 +75,8 @@ export default function DashboardPage() {
             <Wallet className="h-4 w-4 text-blue" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
-              {balances?.main?.toLocaleString() || "0.00"} {user?.currency || "USD"}
+            <div className="text-xl font-bold text-white">
+              {balances?.main?.amount?.toLocaleString() || "0.00"} {balances?.main?.currency || "USD"}
             </div>
           </CardContent>
         </Card>
@@ -72,8 +87,8 @@ export default function DashboardPage() {
             <Activity className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
-              {balances?.mining?.toLocaleString() || "0.00"} {user?.currency || "USD"}
+            <div className="text-xl font-bold text-white">
+              {balances?.mining?.amount?.toLocaleString() || "0.00"} {balances?.mining?.currency || "USD"}
             </div>
           </CardContent>
         </Card>
@@ -84,8 +99,8 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-purple" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
-              {balances?.trade?.toLocaleString() || "0.00"} {user?.currency || "USD"}
+            <div className="text-xl font-bold text-white">
+              {balances?.trade?.amount?.toLocaleString() || "0.00"} {balances?.trade?.currency || "USD"}
             </div>
           </CardContent>
         </Card>
@@ -95,8 +110,9 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium text-gray-300">Signal Strength</CardTitle>
             <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
             <div className="text-2xl font-bold text-white">{user?.signalStrength || 0}%</div>
+            <SignalStrengthBar value={user?.signalStrength || 0} />
           </CardContent>
         </Card>
       </div>
