@@ -80,11 +80,12 @@ export default function RegisterPage() {
     setIsLoading(true);
     try {
       const response = await authApi.register(data);
-      setAuth(response.data.token, response.data.user, response.data.user.isAdmin || false);
+      // API client extracts data field, so response is { user, token }
+      setAuth(response.token, response.user, response.user.isAdmin || false);
       
       // Extract and store balances from user object if available
-      if (response.data.user.balances) {
-        setBalances(response.data.user.balances);
+      if (response.user.balances) {
+        setBalances(response.user.balances);
       }
       
       toast.success("Registration successful!");

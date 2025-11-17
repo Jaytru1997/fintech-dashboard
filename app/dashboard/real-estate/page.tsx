@@ -21,7 +21,6 @@ export default function RealEstatePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<RealEstate | null>(null);
   const [amount, setAmount] = useState("");
-  const [durationMonths, setDurationMonths] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -48,18 +47,16 @@ export default function RealEstatePage() {
   };
 
   const handleInvest = async () => {
-    if (!selectedProperty || !amount || !durationMonths) return;
+    if (!selectedProperty || !amount) return;
     setIsSubmitting(true);
     try {
       await userApi.investRealEstate({
         realEstateId: selectedProperty._id,
         amount: parseFloat(amount),
-        durationMonths: parseInt(durationMonths),
       });
       toast.success("Investment successful!");
       setSelectedProperty(null);
       setAmount("");
-      setDurationMonths("");
       loadData();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Investment failed");
@@ -154,10 +151,6 @@ export default function RealEstatePage() {
                           <h3 className="font-semibold">Overview</h3>
                           <p className="text-sm text-muted-foreground">{property.overview}</p>
                         </div>
-                        <div className="space-y-2">
-                          <h3 className="font-semibold">Project Breakdown</h3>
-                          <p className="text-sm text-muted-foreground">{property.projectBreakdown}</p>
-                        </div>
                         <div className="space-y-4 pt-4 border-t">
                           <div className="space-y-2">
                             <Label htmlFor="amount">Investment Amount</Label>
@@ -170,28 +163,18 @@ export default function RealEstatePage() {
                               placeholder="Enter amount"
                             />
                           </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="duration">Duration (months)</Label>
-                            <Input
-                              id="duration"
-                              type="number"
-                              min="1"
-                              value={durationMonths}
-                              onChange={(e) => setDurationMonths(e.target.value)}
-                              placeholder="Enter duration"
-                            />
-                          </div>
                           <div className="p-4 bg-background-dark rounded-lg">
-                            <p className="text-sm text-gray-400">Expected Return:</p>
+                            <p className="text-sm text-gray-400">Expected Annual Return:</p>
                             <p className="text-2xl font-bold text-white">
-                              ${amount && durationMonths
-                                ? (parseFloat(amount) * (1 + property.roi / 100) * (parseInt(durationMonths) / 12)).toFixed(2)
+                              ${amount
+                                ? (parseFloat(amount) * (property.roi / 100)).toFixed(2)
                                 : "0.00"}
                             </p>
+                            <p className="text-sm text-gray-400 mt-2">ROI: {property.roi}%</p>
                           </div>
                           <Button
                             onClick={handleInvest}
-                            disabled={isSubmitting || !amount || !durationMonths || parseFloat(amount) < property.minimumInvestment}
+                            disabled={isSubmitting || !amount || parseFloat(amount) < property.minimumInvestment}
                             className="w-full"
                           >
                             {isSubmitting ? "Processing..." : "Invest Now"}
@@ -240,22 +223,16 @@ export default function RealEstatePage() {
                   ) : (
                     investments.map((investment) => (
                       <TableRow key={investment._id}>
-                        <TableCell>{investment.realEstateTitle || "N/A"}</TableCell>
+                        <TableCell>{investment.realEstateId || "N/A"}</TableCell>
                         <TableCell>${investment.amount.toLocaleString()}</TableCell>
-                        <TableCell>{investment.durationMonths} months</TableCell>
+                        <TableCell>ROI: {investment.roi}%</TableCell>
                         <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded text-xs ${
-                              investment.status === "active"
-                                ? "bg-primary/20 text-primary"
-                                : "bg-background-dark text-gray-400"
-                            }`}
-                          >
-                            {investment.status}
+                          <span className="px-2 py-1 rounded text-xs bg-primary/20 text-primary">
+                            Active
                           </span>
                         </TableCell>
                         <TableCell>
-                          {new Date(investment.createdAt).toLocaleDateString()}
+                          {investment.startDate ? new Date(investment.startDate).toLocaleDateString() : "N/A"}
                         </TableCell>
                       </TableRow>
                     ))

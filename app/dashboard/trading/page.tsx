@@ -30,8 +30,9 @@ export default function TradingPage() {
     takeProfit: "",
     stopLoss: "",
     duration: "",
-    direction: "long" as "long" | "short",
+    direction: "BUY" as "BUY" | "SELL",
     isSwap: false,
+    swapPair: "",
   });
 
   useEffect(() => {
@@ -57,12 +58,16 @@ export default function TradingPage() {
     setIsSubmitting(true);
     try {
       await userApi.trade({
-        ...formData,
+        tradeType: formData.tradeType,
+        pair: formData.pair,
         amount: parseFloat(formData.amount),
         leverage: parseFloat(formData.leverage),
         takeProfit: formData.takeProfit ? parseFloat(formData.takeProfit) : undefined,
         stopLoss: formData.stopLoss ? parseFloat(formData.stopLoss) : undefined,
-        duration: parseInt(formData.duration),
+        duration: parseInt(formData.duration), // Duration in hours
+        direction: formData.direction,
+        isSwap: formData.isSwap,
+        swapPair: formData.isSwap && formData.swapPair ? formData.swapPair : undefined,
       });
       toast.success("Trade executed successfully!");
       setFormData({
@@ -73,8 +78,9 @@ export default function TradingPage() {
         takeProfit: "",
         stopLoss: "",
         duration: "",
-        direction: "long",
+        direction: "BUY",
         isSwap: false,
+        swapPair: "",
       });
       loadTrades();
     } catch (error: any) {
@@ -191,27 +197,27 @@ export default function TradingPage() {
                     <Label htmlFor="direction">Direction</Label>
                     <Select
                       value={formData.direction}
-                      onValueChange={(value: "long" | "short") => setFormData({ ...formData, direction: value })}
+                      onValueChange={(value: "BUY" | "SELL") => setFormData({ ...formData, direction: value })}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="long">Long</SelectItem>
-                        <SelectItem value="short">Short</SelectItem>
+                        <SelectItem value="BUY">BUY</SelectItem>
+                        <SelectItem value="SELL">SELL</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="duration">Duration (minutes)</Label>
+                    <Label htmlFor="duration">Duration (hours)</Label>
                     <Input
                       id="duration"
                       type="number"
                       min="1"
                       value={formData.duration}
                       onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                      placeholder="Enter duration"
+                      placeholder="Enter duration in hours"
                       required
                     />
                   </div>
@@ -239,13 +245,27 @@ export default function TradingPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="isSwap"
-                    checked={formData.isSwap}
-                    onCheckedChange={(checked) => setFormData({ ...formData, isSwap: checked as boolean })}
-                  />
-                  <Label htmlFor="isSwap">Is Swap</Label>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="isSwap"
+                      checked={formData.isSwap}
+                      onCheckedChange={(checked) => setFormData({ ...formData, isSwap: checked as boolean })}
+                    />
+                    <Label htmlFor="isSwap">Is Swap</Label>
+                  </div>
+                  {formData.isSwap && (
+                    <div className="space-y-2">
+                      <Label htmlFor="swapPair">Swap Pair</Label>
+                      <Input
+                        id="swapPair"
+                        value={formData.swapPair}
+                        onChange={(e) => setFormData({ ...formData, swapPair: e.target.value })}
+                        placeholder="e.g., BTC/ETH"
+                        required={formData.isSwap}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -292,20 +312,20 @@ export default function TradingPage() {
                         <TableCell>
                           <span
                             className={`px-2 py-1 rounded text-xs ${
-                              trade.direction === "long"
+                              trade.direction === "BUY"
                                 ? "bg-primary/20 text-primary"
                                 : "bg-error/20 text-error"
                             }`}
                           >
-                            {trade.direction.toUpperCase()}
+                            {trade.direction}
                           </span>
                         </TableCell>
                         <TableCell>
                           <span
                             className={`px-2 py-1 rounded text-xs ${
-                              trade.status === "active"
+                              trade.status === "open"
                                 ? "bg-primary/20 text-primary"
-                                : trade.status === "completed"
+                                : trade.status === "closed"
                                 ? "bg-green-500/20 text-green-500"
                                 : "bg-background-dark text-gray-400"
                             }`}

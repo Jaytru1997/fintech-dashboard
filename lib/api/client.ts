@@ -25,12 +25,29 @@ api.interceptors.request.use(
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => response.data,
-  (error: AxiosError<{ message?: string }>) => {
-    if (error.response) {
+  (response) => {
+    // Extract data field from API response format: { data: {...}, message: "...", status: "..." }
+    const responseData = response.data;
+    if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+      return responseData.data;
+    }
+    return responseData;
+  },
+  (error: AxiosError<{ message?: string | string[]; error?: string }>) => {
+      if (error.response) {
       const status = error.response.status;
-      const message =
-        error.response.data?.message || "An error occurred";
+      const errorData = error.response.data;
+      let message = "An error occurred";
+      
+      if (errorData) {
+        if (typeof errorData.message === 'string') {
+          message = errorData.message;
+        } else if (Array.isArray(errorData.message)) {
+          message = errorData.message.join(', ');
+        } else if (errorData.error) {
+          message = errorData.error;
+        }
+      }
 
       if (status === 401) {
         // Only clear auth if we have a token (to avoid clearing during initial hydration)

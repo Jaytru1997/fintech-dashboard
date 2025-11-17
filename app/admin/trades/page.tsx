@@ -19,7 +19,7 @@ export default function AdminTradesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     status: "",
-    result: "" as "win" | "loss" | "",
+    result: "" as "win" | "loss" | "draw" | "",
   });
 
   useEffect(() => {
@@ -30,30 +30,12 @@ export default function AdminTradesPage() {
     setIsLoading(true);
     try {
       const response = await adminApi.getTrades();
-      // Handle different response structures
-      let data = response;
-      if (response && typeof response === 'object' && 'data' in response && Array.isArray(response.data)) {
-        data = response.data;
-      } else if (response && typeof response === 'object' && 'trades' in response && Array.isArray(response.trades)) {
-        data = response.trades;
-      }
-      
-      // Ensure data is always an array and filter out any null/undefined entries
-      const validTrades = Array.isArray(data) 
-        ? data.filter((trade): trade is Trade => trade != null && typeof trade === 'object' && ('_id' in trade || 'id' in trade))
-          .map((trade: any) => {
-            if ('id' in trade && !('_id' in trade)) {
-              const { id, ...rest } = trade;
-              return { ...rest, _id: id } as Trade;
-            }
-            return trade as Trade;
-          })
-        : [];
+      // API client extracts data field, so response should be array directly
+      const validTrades = Array.isArray(response) ? response : [];
       setTrades(validTrades);
     } catch (error: any) {
       console.error("Error loading trades:", error);
       toast.error(error.response?.data?.message || error.message || "Failed to load trades");
-      // Ensure trades is always an array even on error
       setTrades([]);
     } finally {
       setIsLoading(false);
@@ -135,14 +117,14 @@ export default function AdminTradesPage() {
                     <TableCell>
                       <span
                         className={`px-2 py-1 rounded text-xs ${
-                          trade?.status === "active"
+                          trade?.status === "open"
                             ? "bg-primary/20 text-primary"
-                            : trade?.status === "completed"
+                            : trade?.status === "closed"
                             ? "bg-green-500/20 text-green-500"
                             : "bg-background-dark text-gray-400"
                         }`}
                       >
-                        {trade?.status || 'pending'}
+                        {trade?.status || 'open'}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -151,7 +133,9 @@ export default function AdminTradesPage() {
                           className={`px-2 py-1 rounded text-xs ${
                             trade.result === "win"
                               ? "bg-green-500/20 text-green-500"
-                              : "bg-error/20 text-error"
+                              : trade.result === "loss"
+                              ? "bg-error/20 text-error"
+                              : "bg-yellow-500/20 text-yellow-500"
                           }`}
                         >
                           {trade.result}
@@ -211,7 +195,7 @@ export default function AdminTradesPage() {
                               <Select
                                 value={formData.result}
                                 onValueChange={(value) =>
-                                  setFormData({ ...formData, result: value as "win" | "loss" })
+                                  setFormData({ ...formData, result: value as "win" | "loss" | "draw" | "" })
                                 }
                               >
                                 <SelectTrigger>
@@ -220,6 +204,7 @@ export default function AdminTradesPage() {
                                 <SelectContent>
                                   <SelectItem value="win">Win</SelectItem>
                                   <SelectItem value="loss">Loss</SelectItem>
+                                  <SelectItem value="draw">Draw</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>

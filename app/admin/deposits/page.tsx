@@ -22,30 +22,12 @@ export default function AdminDepositsPage() {
     setIsLoading(true);
     try {
       const response = await adminApi.getDeposits();
-      // Handle different response structures
-      let data = response;
-      if (response && typeof response === 'object' && 'data' in response && Array.isArray(response.data)) {
-        data = response.data;
-      } else if (response && typeof response === 'object' && 'deposits' in response && Array.isArray(response.deposits)) {
-        data = response.deposits;
-      }
-      
-      // Ensure data is always an array and filter out any null/undefined entries
-      const validDeposits = Array.isArray(data) 
-        ? data.filter((deposit): deposit is Deposit => deposit != null && typeof deposit === 'object' && ('_id' in deposit || 'id' in deposit))
-          .map((deposit: any) => {
-            if ('id' in deposit && !('_id' in deposit)) {
-              const { id, ...rest } = deposit;
-              return { ...rest, _id: id } as Deposit;
-            }
-            return deposit as Deposit;
-          })
-        : [];
+      // API client extracts data field, so response should be array directly
+      const validDeposits = Array.isArray(response) ? response : [];
       setDeposits(validDeposits);
     } catch (error: any) {
       console.error("Error loading deposits:", error);
       toast.error(error.response?.data?.message || error.message || "Failed to load deposits");
-      // Ensure deposits is always an array even on error
       setDeposits([]);
     } finally {
       setIsLoading(false);
@@ -110,7 +92,7 @@ export default function AdminDepositsPage() {
               ) : (
                 deposits.map((deposit) => (
                   <TableRow key={deposit?._id || 'unknown'}>
-                    <TableCell>{deposit?.method || 'N/A'}</TableCell>
+                    <TableCell>{deposit?.methodId || 'N/A'}</TableCell>
                     <TableCell>{(deposit?.amount ?? 0).toLocaleString()}</TableCell>
                     <TableCell>{deposit?.currency || 'N/A'}</TableCell>
                     <TableCell>

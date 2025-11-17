@@ -181,7 +181,7 @@ export const adminApi = {
     data: UpdateDepositStatusRequest
   ): Promise<Deposit> => api.patch(`/admin/deposit/${id}`, data),
   getWithdrawals: (): Promise<Withdrawal[]> => api.get("/admin/withdrawals"),
-  generateWithdrawalCode: (id: string): Promise<{ code: string }> =>
+  generateWithdrawalCode: (id: string): Promise<{ withdrawalCode: string; sent: boolean }> =>
     api.post(`/admin/withdrawal/${id}/generate-code`),
   updateWithdrawalStatus: (
     id: string,

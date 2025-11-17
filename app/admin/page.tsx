@@ -29,12 +29,12 @@ export default function AdminDashboardPage() {
         adminApi.getWithdrawals().catch(() => []),
         adminApi.getTrades().catch(() => []),
       ]);
-      // Ensure all data is arrays before accessing length and filter out null/undefined
+      // API client now extracts data field, so responses should be arrays directly
       setStats({
-        users: Array.isArray(users) ? users.filter(u => u != null).length : 0,
-        deposits: Array.isArray(deposits) ? deposits.filter(d => d != null).length : 0,
-        withdrawals: Array.isArray(withdrawals) ? withdrawals.filter(w => w != null).length : 0,
-        trades: Array.isArray(trades) ? trades.filter(t => t != null).length : 0,
+        users: Array.isArray(users) ? users.length : 0,
+        deposits: Array.isArray(deposits) ? deposits.length : 0,
+        withdrawals: Array.isArray(withdrawals) ? withdrawals.length : 0,
+        trades: Array.isArray(trades) ? trades.length : 0,
       });
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to load dashboard stats");

@@ -36,18 +36,16 @@ export interface RegisterRequest {
   referralCode?: string;
 }
 
+// AuthResponse after API client extraction (data field is extracted)
 export interface AuthResponse {
-  data: {
-    token: string;
-    user: User;
-  };
-  message: string;
-  status: "success" | "error";
+  token: string;
+  user: User;
 }
 
+// TwoFASetupResponse after API client extraction
 export interface TwoFASetupResponse {
-  qrCode: string;
   secret: string;
+  qrCode: string;
 }
 
 // Balance Types
@@ -62,6 +60,7 @@ export interface Balances {
 // Transaction Types
 export interface Trade {
   _id: string;
+  userId?: string;
   tradeType: string;
   pair: string;
   amount: number;
@@ -69,16 +68,18 @@ export interface Trade {
   takeProfit?: number;
   stopLoss?: number;
   duration: number;
-  direction: "long" | "short";
-  isSwap: boolean;
-  status: "pending" | "active" | "completed" | "cancelled";
-  result?: "win" | "loss";
+  direction: "BUY" | "SELL";
+  isSwap?: boolean;
+  swapPair?: string;
+  status: "open" | "closed";
+  result?: "win" | "loss" | "draw";
   createdAt: string;
 }
 
 export interface Deposit {
   _id: string;
-  method: string;
+  userId?: string;
+  methodId?: string;
   amount: number;
   currency: string;
   proof?: string;
@@ -88,11 +89,12 @@ export interface Deposit {
 
 export interface Withdrawal {
   _id: string;
-  balanceType: string;
-  method: string;
+  userId?: string;
+  balanceType: "main" | "mining" | "trade" | "realEstate" | "referral";
+  methodId?: string;
   amount: number;
   currency: string;
-  details: string;
+  details?: Record<string, any>;
   withdrawalCode?: string;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
@@ -101,21 +103,21 @@ export interface Withdrawal {
 export interface Staking {
   _id: string;
   poolId: string;
-  poolName?: string;
+  userId?: string;
   amount: number;
-  durationDays: number;
-  status: "active" | "completed";
-  createdAt: string;
+  roi: number;
+  cycle: "daily" | "weekly" | "monthly";
+  startDate: string;
+  endDate: string;
 }
 
 export interface RealEstateInvestment {
   _id: string;
   realEstateId: string;
-  realEstateTitle?: string;
+  userId?: string;
   amount: number;
-  durationMonths: number;
-  status: "active" | "completed";
-  createdAt: string;
+  roi: number;
+  startDate: string;
 }
 
 // Resource Types
@@ -136,8 +138,10 @@ export interface RealEstate {
   roi: number;
   strategy: string;
   overview: string;
-  documents: string[];
-  projectBreakdown: string;
+  documents?: string[];
+  type: string;
+  kind: string;
+  objective?: string;
   whyThisProject: string;
   whyThisSponsor: string;
 }
@@ -145,32 +149,41 @@ export interface RealEstate {
 export interface SubscriptionPlan {
   _id: string;
   name: string;
-  minAmount: number;
-  maxAmount: number;
+  price: number;
+  duration: number;
+  features: string[];
 }
 
 export interface SignalPrice {
   _id: string;
-  amount: number;
-  signalValue: number;
+  name: string;
+  price: number;
+  strengthIncrease: number;
 }
 
 export interface CopyTrader {
   _id: string;
   name: string;
   description: string;
-  performance: number;
+  winRate: number;
+  totalTrades: number;
+  image?: string;
   isFollowing?: boolean;
 }
 
 export interface DepositMethod {
   _id: string;
-  method: string;
+  name: string;
+  description: string;
+  isActive: boolean;
 }
 
 export interface WithdrawalMethod {
   _id: string;
-  method: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  requiresCode: boolean;
 }
 
 // Request Types
@@ -184,13 +197,13 @@ export interface UpdateProfileRequest {
 }
 
 export interface UpdateSecurityRequest {
-  password?: string;
-  twoFactorEnabled?: boolean;
+  currentPassword?: string;
+  newPassword?: string;
+  newPasswordRepeat?: string;
 }
 
 export interface SubscribeRequest {
   planId: string;
-  amount: number;
 }
 
 export interface PurchaseSignalRequest {
@@ -201,7 +214,6 @@ export interface PurchaseSignalRequest {
 export interface StakeRequest {
   poolId: string;
   amount: number;
-  durationDays: number;
 }
 
 export interface TradeRequest {
@@ -212,30 +224,30 @@ export interface TradeRequest {
   takeProfit?: number;
   stopLoss?: number;
   duration: number;
-  direction: "long" | "short";
+  direction: "BUY" | "SELL";
   isSwap?: boolean;
+  swapPair?: string;
 }
 
 export interface RealEstateInvestRequest {
   realEstateId: string;
   amount: number;
-  durationMonths: number;
 }
 
 export interface DepositRequest {
-  method: string;
+  methodId: string;
   amount: number;
   currency: string;
-  proof?: File;
+  proof: File;
 }
 
 export interface WithdrawalRequest {
-  balanceType: string;
-  method: string;
+  balanceType: "main" | "mining" | "trade" | "realEstate" | "referral";
+  methodId: string;
   amount: number;
   currency: string;
-  details: string;
-  withdrawalCode: string;
+  details?: Record<string, any>;
+  withdrawalCode?: string;
 }
 
 // Admin Types
@@ -250,8 +262,10 @@ export interface CreateRealEstateRequest {
   roi: number;
   strategy: string;
   overview: string;
-  documents: string[];
-  projectBreakdown: string;
+  documents?: string[];
+  type: string;
+  kind: string;
+  objective?: string;
   whyThisProject: string;
   whyThisSponsor: string;
 }
@@ -267,39 +281,55 @@ export interface CreateMiningPoolRequest {
 export interface CreateCopyTraderRequest {
   name: string;
   description: string;
-  performance: number;
+  winRate: number;
+  totalTrades: number;
+  image?: string;
 }
 
 export interface CreateSubscriptionPlanRequest {
   name: string;
-  minAmount: number;
-  maxAmount: number;
+  price: number;
+  duration: number;
+  features: string[];
 }
 
 export interface CreateSignalPriceRequest {
-  amount: number;
-  signalValue: number;
+  name: string;
+  price: number;
+  strengthIncrease: number;
 }
 
 export interface CreateDepositMethodRequest {
-  method: string;
+  name: string;
+  description: string;
+  isActive: boolean;
 }
 
 export interface CreateWithdrawalMethodRequest {
-  method: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  requiresCode: boolean;
 }
 
 export interface UpdateDepositStatusRequest {
   status: "approved" | "rejected";
+  notes?: string;
 }
 
 export interface UpdateWithdrawalStatusRequest {
   status: "approved" | "rejected";
+  notes?: string;
 }
 
 export interface UpdateUserRequest {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  country?: string;
+  phoneNumber?: string;
+  currency?: string;
   balances?: Partial<Balances>;
-  signalStrength?: number;
-  kycStatus?: "pending" | "approved" | "rejected";
+  isAdmin?: boolean;
 }
 

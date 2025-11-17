@@ -38,35 +38,12 @@ export default function AdminUsersPage() {
     setIsLoading(true);
     try {
       const response = await adminApi.getUsers();
-      // Handle different response structures
-      let data = response;
-      if (response && typeof response === 'object' && 'data' in response && Array.isArray(response.data)) {
-        data = response.data;
-      } else if (response && typeof response === 'object' && 'users' in response && Array.isArray(response.users)) {
-        data = response.users;
-      }
-      
-      // Ensure data is always an array and filter out any null/undefined entries
-      const validUsers = Array.isArray(data) 
-        ? data.filter((user): user is AdminUser => {
-            if (!user || typeof user !== 'object') return false;
-            // Check for _id or id field
-            return '_id' in user || 'id' in user;
-          }).map((user) => {
-            // Normalize user object - convert id to _id if needed
-            const userObj = user as any;
-            if (userObj && 'id' in userObj && !('_id' in userObj)) {
-              const { id, ...rest } = userObj;
-              return { ...rest, _id: id } as AdminUser;
-            }
-            return user as AdminUser;
-          })
-        : [];
+      // API client extracts data field, so response should be array directly
+      const validUsers = Array.isArray(response) ? response : [];
       setUsers(validUsers);
     } catch (error: any) {
       console.error("Error loading users:", error);
       toast.error(error.response?.data?.message || error.message || "Failed to load users");
-      // Ensure users is always an array even on error
       setUsers([]);
     } finally {
       setIsLoading(false);

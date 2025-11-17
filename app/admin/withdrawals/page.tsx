@@ -22,30 +22,12 @@ export default function AdminWithdrawalsPage() {
     setIsLoading(true);
     try {
       const response = await adminApi.getWithdrawals();
-      // Handle different response structures
-      let data = response;
-      if (response && typeof response === 'object' && 'data' in response && Array.isArray(response.data)) {
-        data = response.data;
-      } else if (response && typeof response === 'object' && 'withdrawals' in response && Array.isArray(response.withdrawals)) {
-        data = response.withdrawals;
-      }
-      
-      // Ensure data is always an array and filter out any null/undefined entries
-      const validWithdrawals = Array.isArray(data) 
-        ? data.filter((withdrawal): withdrawal is Withdrawal => withdrawal != null && typeof withdrawal === 'object' && ('_id' in withdrawal || 'id' in withdrawal))
-          .map((withdrawal: any) => {
-            if ('id' in withdrawal && !('_id' in withdrawal)) {
-              const { id, ...rest } = withdrawal;
-              return { ...rest, _id: id } as Withdrawal;
-            }
-            return withdrawal as Withdrawal;
-          })
-        : [];
+      // API client extracts data field, so response should be array directly
+      const validWithdrawals = Array.isArray(response) ? response : [];
       setWithdrawals(validWithdrawals);
     } catch (error: any) {
       console.error("Error loading withdrawals:", error);
       toast.error(error.response?.data?.message || error.message || "Failed to load withdrawals");
-      // Ensure withdrawals is always an array even on error
       setWithdrawals([]);
     } finally {
       setIsLoading(false);
@@ -56,8 +38,8 @@ export default function AdminWithdrawalsPage() {
     if (!id) return;
     try {
       const response = await adminApi.generateWithdrawalCode(id);
-      const code = response?.code || 'N/A';
-      toast.success(`Withdrawal code: ${code}`);
+      const code = response?.withdrawalCode || 'N/A';
+      toast.success(`Withdrawal code: ${code}${response?.sent ? ' (sent via email)' : ''}`);
       loadWithdrawals();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to generate code");
@@ -123,10 +105,16 @@ export default function AdminWithdrawalsPage() {
               ) : (
                 withdrawals.map((withdrawal) => (
                   <TableRow key={withdrawal?._id || 'unknown'}>
-                    <TableCell>{withdrawal?.method || 'N/A'}</TableCell>
+                    <TableCell>{withdrawal?.methodId || 'N/A'}</TableCell>
                     <TableCell>{(withdrawal?.amount ?? 0).toLocaleString()}</TableCell>
                     <TableCell>{withdrawal?.currency || 'N/A'}</TableCell>
-                    <TableCell className="max-w-xs truncate">{withdrawal?.details || 'N/A'}</TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      {withdrawal?.details 
+                        ? (typeof withdrawal.details === 'string' 
+                            ? withdrawal.details 
+                            : JSON.stringify(withdrawal.details))
+                        : 'N/A'}
+                    </TableCell>
                     <TableCell>
                       <span
                         className={`px-2 py-1 rounded text-xs ${

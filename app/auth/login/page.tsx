@@ -46,15 +46,16 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const response = await authApi.login(data);
-      setAuth(response.data.token, response.data.user, response.data.user.isAdmin || false);
+      // API client extracts data field, so response is { user, token }
+      setAuth(response.token, response.user, response.user.isAdmin || false);
       
       // Extract and store balances from user object if available
-      if (response.data.user.balances) {
-        setBalances(response.data.user.balances);
+      if (response.user.balances) {
+        setBalances(response.user.balances);
       }
       
       toast.success("Login successful!");
-      router.push(response.data.user?.isAdmin ? "/admin" : "/dashboard");
+      router.push(response.user?.isAdmin ? "/admin" : "/dashboard");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Login failed");
     } finally {

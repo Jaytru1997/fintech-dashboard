@@ -21,7 +21,7 @@ export default function DepositsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    method: "",
+    methodId: "",
     amount: "",
     currency: "USD",
     proof: null as File | null,
@@ -65,19 +65,21 @@ export default function DepositsPage() {
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.proof) {
+      toast.error("Proof of payment is required");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append("method", formData.method);
+      formDataToSend.append("methodId", formData.methodId);
       formDataToSend.append("amount", formData.amount);
       formDataToSend.append("currency", formData.currency);
-      if (formData.proof) {
-        formDataToSend.append("proof", formData.proof);
-      }
+      formDataToSend.append("proof", formData.proof);
       await userApi.deposit(formDataToSend);
       toast.success("Deposit request submitted successfully!");
       setFormData({
-        method: "",
+        methodId: "",
         amount: "",
         currency: "USD",
         proof: null,
@@ -130,18 +132,18 @@ export default function DepositsPage() {
               <form onSubmit={handleDeposit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="method">Deposit Method</Label>
+                    <Label htmlFor="methodId">Deposit Method</Label>
                     <Select
-                      value={formData.method}
-                      onValueChange={(value) => setFormData({ ...formData, method: value })}
+                      value={formData.methodId}
+                      onValueChange={(value) => setFormData({ ...formData, methodId: value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select method" />
                       </SelectTrigger>
                       <SelectContent>
                         {methods.map((method) => (
-                          <SelectItem key={method._id} value={method.method}>
-                            {method.method}
+                          <SelectItem key={method._id} value={method._id}>
+                            {method.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -182,7 +184,7 @@ export default function DepositsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Proof of Payment (Optional)</Label>
+                  <Label>Proof of Payment (Required)</Label>
                   <div
                     {...getRootProps()}
                     className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
@@ -210,7 +212,7 @@ export default function DepositsPage() {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={isSubmitting || !formData.method || !formData.amount}>
+                <Button type="submit" className="w-full" disabled={isSubmitting || !formData.methodId || !formData.amount || !formData.proof}>
                   {isSubmitting ? "Submitting..." : "Submit Deposit Request"}
                 </Button>
               </form>
@@ -244,7 +246,7 @@ export default function DepositsPage() {
                   ) : (
                     deposits.map((deposit) => (
                       <TableRow key={deposit._id}>
-                        <TableCell>{deposit.method}</TableCell>
+                        <TableCell>{deposit.methodId || 'N/A'}</TableCell>
                         <TableCell>{deposit.amount.toLocaleString()}</TableCell>
                         <TableCell>{deposit.currency}</TableCell>
                         <TableCell>

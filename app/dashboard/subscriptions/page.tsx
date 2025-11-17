@@ -16,7 +16,6 @@ export default function SubscriptionsPage() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
-  const [amount, setAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -38,16 +37,15 @@ export default function SubscriptionsPage() {
   };
 
   const handleSubscribe = async () => {
-    if (!selectedPlan || !amount) return;
+    if (!selectedPlan) return;
     setIsSubmitting(true);
     try {
       await userApi.subscribe({
         planId: selectedPlan._id,
-        amount: parseFloat(amount),
       });
       toast.success("Subscription successful!");
       setSelectedPlan(null);
-      setAmount("");
+      loadPlans();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Subscription failed");
     } finally {
@@ -86,7 +84,7 @@ export default function SubscriptionsPage() {
                 {plan.name}
               </CardTitle>
               <CardDescription>
-                Min: {plan.minAmount} - Max: {plan.maxAmount}
+                Price: ${plan.price} | Duration: {plan.duration} days
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -103,25 +101,23 @@ export default function SubscriptionsPage() {
                   <DialogHeader>
                     <DialogTitle>Subscribe to {plan.name}</DialogTitle>
                     <DialogDescription>
-                      Enter the amount you want to subscribe (between {plan.minAmount} and {plan.maxAmount})
+                      Price: ${plan.price} | Duration: {plan.duration} days
+                      {plan.features && plan.features.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-sm font-medium">Features:</p>
+                          <ul className="text-sm list-disc list-inside">
+                            {plan.features.map((feature, idx) => (
+                              <li key={idx}>{feature}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="amount">Amount</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        min={plan.minAmount}
-                        max={plan.maxAmount}
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="Enter amount"
-                      />
-                    </div>
                     <Button
                       onClick={handleSubscribe}
-                      disabled={isSubmitting || !amount}
+                      disabled={isSubmitting}
                       className="w-full"
                     >
                       {isSubmitting ? "Subscribing..." : "Confirm Subscription"}

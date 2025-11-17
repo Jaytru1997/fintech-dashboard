@@ -21,11 +21,14 @@ export default function WithdrawalsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    balanceType: "main",
-    method: "",
+    balanceType: "main" as "main" | "mining" | "trade" | "realEstate" | "referral",
+    methodId: "",
     amount: "",
     currency: "USD",
-    details: "",
+    details: {
+      accountNumber: "",
+      bankName: "",
+    },
     withdrawalCode: "",
   });
 
@@ -56,17 +59,29 @@ export default function WithdrawalsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      // Build details object - only include non-empty fields
+      const detailsObj: Record<string, any> = {};
+      if (formData.details.accountNumber) detailsObj.accountNumber = formData.details.accountNumber;
+      if (formData.details.bankName) detailsObj.bankName = formData.details.bankName;
+      
       await userApi.withdrawal({
-        ...formData,
+        balanceType: formData.balanceType,
+        methodId: formData.methodId,
         amount: parseFloat(formData.amount),
+        currency: formData.currency,
+        details: Object.keys(detailsObj).length > 0 ? detailsObj : undefined,
+        withdrawalCode: formData.withdrawalCode || undefined,
       });
       toast.success("Withdrawal request submitted successfully!");
       setFormData({
         balanceType: "main",
-        method: "",
+        methodId: "",
         amount: "",
         currency: "USD",
-        details: "",
+        details: {
+          accountNumber: "",
+          bankName: "",
+        },
         withdrawalCode: "",
       });
       loadData();
@@ -120,7 +135,10 @@ export default function WithdrawalsPage() {
                     <Label htmlFor="balanceType">Balance Type</Label>
                     <Select
                       value={formData.balanceType}
-                      onValueChange={(value) => setFormData({ ...formData, balanceType: value })}
+                      onValueChange={(value) => setFormData({ 
+                        ...formData, 
+                        balanceType: value as "main" | "mining" | "trade" | "realEstate" | "referral"
+                      })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -136,18 +154,18 @@ export default function WithdrawalsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="method">Withdrawal Method</Label>
+                    <Label htmlFor="methodId">Withdrawal Method</Label>
                     <Select
-                      value={formData.method}
-                      onValueChange={(value) => setFormData({ ...formData, method: value })}
+                      value={formData.methodId}
+                      onValueChange={(value) => setFormData({ ...formData, methodId: value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select method" />
                       </SelectTrigger>
                       <SelectContent>
                         {methods.map((method) => (
-                          <SelectItem key={method._id} value={method.method}>
-                            {method.method}
+                          <SelectItem key={method._id} value={method._id}>
+                            {method.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -186,33 +204,47 @@ export default function WithdrawalsPage() {
                     />
                   </div>
 
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="details">Withdrawal Details</Label>
-                    <Textarea
-                      id="details"
-                      value={formData.details}
-                      onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-                      placeholder="Enter account details, wallet address, etc."
-                      required
+                  <div className="space-y-2">
+                    <Label htmlFor="accountNumber">Account Number / Wallet Address</Label>
+                    <Input
+                      id="accountNumber"
+                      value={formData.details.accountNumber}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        details: { ...formData.details, accountNumber: e.target.value }
+                      })}
+                      placeholder="Enter account number or wallet address"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bankName">Bank Name (if applicable)</Label>
+                    <Input
+                      id="bankName"
+                      value={formData.details.bankName}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        details: { ...formData.details, bankName: e.target.value }
+                      })}
+                      placeholder="Enter bank name"
                     />
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="withdrawalCode">Withdrawal Code</Label>
+                    <Label htmlFor="withdrawalCode">Withdrawal Code (Optional)</Label>
                     <Input
                       id="withdrawalCode"
                       value={formData.withdrawalCode}
                       onChange={(e) => setFormData({ ...formData, withdrawalCode: e.target.value })}
-                      placeholder="Enter withdrawal code"
-                      required
+                      placeholder="Enter withdrawal code if required"
                     />
                     <p className="text-xs text-gray-400">
-                      Contact support to get your withdrawal code
+                      Some withdrawal methods may require a code. Contact support if needed.
                     </p>
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={isSubmitting || !formData.method || !formData.amount || !formData.details || !formData.withdrawalCode}>
+                <Button type="submit" className="w-full" disabled={isSubmitting || !formData.methodId || !formData.amount}>
                   {isSubmitting ? "Submitting..." : "Submit Withdrawal Request"}
                 </Button>
               </form>
@@ -246,7 +278,7 @@ export default function WithdrawalsPage() {
                   ) : (
                     withdrawals.map((withdrawal) => (
                       <TableRow key={withdrawal._id}>
-                        <TableCell>{withdrawal.method}</TableCell>
+                        <TableCell>{withdrawal.methodId || 'N/A'}</TableCell>
                         <TableCell>{withdrawal.amount.toLocaleString()}</TableCell>
                         <TableCell>{withdrawal.currency}</TableCell>
                         <TableCell>

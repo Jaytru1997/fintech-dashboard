@@ -21,9 +21,11 @@ export default function AdminSubscriptionsPage() {
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [formData, setFormData] = useState<CreateSubscriptionPlanRequest>({
     name: "",
-    minAmount: 0,
-    maxAmount: 0,
+    price: 0,
+    duration: 0,
+    features: [],
   });
+  const [featureInput, setFeatureInput] = useState("");
 
   useEffect(() => {
     loadPlans();
@@ -95,9 +97,11 @@ export default function AdminSubscriptionsPage() {
   const resetForm = () => {
     setFormData({
       name: "",
-      minAmount: 0,
-      maxAmount: 0,
+      price: 0,
+      duration: 0,
+      features: [],
     });
+    setFeatureInput("");
   };
 
   const handleEdit = (plan: SubscriptionPlan) => {
@@ -105,8 +109,27 @@ export default function AdminSubscriptionsPage() {
     setIsCreateMode(false);
     setFormData({
       name: plan?.name || "",
-      minAmount: plan?.minAmount || 0,
-      maxAmount: plan?.maxAmount || 0,
+      price: plan?.price || 0,
+      duration: plan?.duration || 0,
+      features: plan?.features || [],
+    });
+    setFeatureInput("");
+  };
+
+  const addFeature = () => {
+    if (featureInput.trim()) {
+      setFormData({
+        ...formData,
+        features: [...formData.features, featureInput.trim()],
+      });
+      setFeatureInput("");
+    }
+  };
+
+  const removeFeature = (index: number) => {
+    setFormData({
+      ...formData,
+      features: formData.features.filter((_, i) => i !== index),
     });
   };
 
@@ -168,27 +191,59 @@ export default function AdminSubscriptionsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="minAmount">Minimum Amount</Label>
+                  <Label htmlFor="price">Price</Label>
                   <Input
-                    id="minAmount"
+                    id="price"
                     type="number"
-                    value={formData.minAmount}
-                    onChange={(e) => setFormData({ ...formData, minAmount: parseFloat(e.target.value) || 0 })}
+                    min="0"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="maxAmount">Maximum Amount</Label>
+                  <Label htmlFor="duration">Duration (days)</Label>
                   <Input
-                    id="maxAmount"
+                    id="duration"
                     type="number"
-                    value={formData.maxAmount}
-                    onChange={(e) => setFormData({ ...formData, maxAmount: parseFloat(e.target.value) || 0 })}
+                    min="1"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })}
                   />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="features">Features</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="features"
+                    value={featureInput}
+                    onChange={(e) => setFeatureInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
+                    placeholder="Add a feature and press Enter"
+                  />
+                  <Button type="button" onClick={addFeature} variant="outline">Add</Button>
+                </div>
+                {formData.features.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.features.map((feature, idx) => (
+                      <span key={idx} className="px-2 py-1 bg-primary/20 text-primary rounded text-sm flex items-center gap-1">
+                        {feature}
+                        <button
+                          type="button"
+                          onClick={() => removeFeature(idx)}
+                          className="text-primary hover:text-error"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
               <Button
                 onClick={isCreateMode ? handleCreate : handleUpdate}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !formData.name || !formData.price || !formData.duration}
                 className="w-full"
               >
                 {isSubmitting ? "Processing..." : isCreateMode ? "Create Plan" : "Update Plan"}
@@ -207,15 +262,16 @@ export default function AdminSubscriptionsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Min Amount</TableHead>
-                <TableHead>Max Amount</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Duration (days)</TableHead>
+                <TableHead>Features</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {plans.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-gray-400">
+                  <TableCell colSpan={5} className="text-center text-gray-400">
                     No subscription plans found
                   </TableCell>
                 </TableRow>
@@ -223,8 +279,13 @@ export default function AdminSubscriptionsPage() {
                 plans.map((plan) => (
                   <TableRow key={plan?._id || 'unknown'}>
                     <TableCell className="font-medium">{plan?.name || 'N/A'}</TableCell>
-                    <TableCell>${(plan?.minAmount ?? 0).toLocaleString()}</TableCell>
-                    <TableCell>${(plan?.maxAmount ?? 0).toLocaleString()}</TableCell>
+                    <TableCell>${(plan?.price ?? 0).toLocaleString()}</TableCell>
+                    <TableCell>{plan?.duration ?? 0}</TableCell>
+                    <TableCell>
+                      {plan?.features && plan.features.length > 0 
+                        ? plan.features.slice(0, 2).join(', ') + (plan.features.length > 2 ? ` +${plan.features.length - 2} more` : '')
+                        : 'N/A'}
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant="outline"

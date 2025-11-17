@@ -21,7 +21,6 @@ export default function MiningPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPool, setSelectedPool] = useState<MiningPool | null>(null);
   const [amount, setAmount] = useState("");
-  const [durationDays, setDurationDays] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -48,18 +47,16 @@ export default function MiningPage() {
   };
 
   const handleStake = async () => {
-    if (!selectedPool || !amount || !durationDays) return;
+    if (!selectedPool || !amount) return;
     setIsSubmitting(true);
     try {
       await userApi.stake({
         poolId: selectedPool._id,
         amount: parseFloat(amount),
-        durationDays: parseInt(durationDays),
       });
       toast.success("Staking successful!");
       setSelectedPool(null);
       setAmount("");
-      setDurationDays("");
       loadData();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Staking failed");
@@ -146,28 +143,21 @@ export default function MiningPage() {
                             placeholder="Enter amount"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="duration">Duration (days)</Label>
-                          <Input
-                            id="duration"
-                            type="number"
-                            min="1"
-                            value={durationDays}
-                            onChange={(e) => setDurationDays(e.target.value)}
-                            placeholder="Enter duration"
-                          />
-                        </div>
                         <div className="p-4 bg-background-dark rounded-lg">
-                          <p className="text-sm text-gray-400">Expected Return:</p>
+                          <p className="text-sm text-gray-400">Pool Details:</p>
+                          <p className="text-sm text-white">ROI: {pool.roi}%</p>
+                          <p className="text-sm text-white">Cycle: {pool.cycle}</p>
+                          <p className="text-sm text-white">Duration: {pool.durationDays} days</p>
+                          <p className="text-sm text-gray-400 mt-2">Expected Return:</p>
                           <p className="text-2xl font-bold text-white">
-                            ${amount && durationDays
-                              ? (parseFloat(amount) * (1 + pool.roi / 100) * (parseInt(durationDays) / pool.durationDays)).toFixed(2)
+                            ${amount
+                              ? (parseFloat(amount) * (1 + pool.roi / 100)).toFixed(2)
                               : "0.00"}
                           </p>
                         </div>
                         <Button
                           onClick={handleStake}
-                          disabled={isSubmitting || !amount || !durationDays || parseFloat(amount) < pool.minStake}
+                          disabled={isSubmitting || !amount || parseFloat(amount) < pool.minStake}
                           className="w-full"
                         >
                           {isSubmitting ? "Processing..." : "Confirm Stake"}
@@ -215,22 +205,20 @@ export default function MiningPage() {
                   ) : (
                     stakings.map((staking) => (
                       <TableRow key={staking._id}>
-                        <TableCell>{staking.poolName || "N/A"}</TableCell>
+                        <TableCell>{staking.poolId || "N/A"}</TableCell>
                         <TableCell>${staking.amount.toLocaleString()}</TableCell>
-                        <TableCell>{staking.durationDays} days</TableCell>
                         <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded text-xs ${
-                              staking.status === "active"
-                                ? "bg-primary/20 text-primary"
-                                : "bg-background-dark text-gray-400"
-                            }`}
-                          >
-                            {staking.status}
+                          {staking.startDate && staking.endDate
+                            ? `${Math.ceil((new Date(staking.endDate).getTime() - new Date(staking.startDate).getTime()) / (1000 * 60 * 60 * 24))} days`
+                            : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <span className="px-2 py-1 rounded text-xs bg-primary/20 text-primary">
+                            Active
                           </span>
                         </TableCell>
                         <TableCell>
-                          {new Date(staking.createdAt).toLocaleDateString()}
+                          {staking.startDate ? new Date(staking.startDate).toLocaleDateString() : "N/A"}
                         </TableCell>
                       </TableRow>
                     ))

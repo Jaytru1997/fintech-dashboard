@@ -50,7 +50,7 @@ export default function SignalPage() {
       });
       toast.success("Signal strength purchased successfully!");
       if (user) {
-        updateUser({ signalStrength: (user.signalStrength || 0) + selectedPrice.signalValue });
+        updateUser({ signalStrength: (user.signalStrength || 0) + selectedPrice.strengthIncrease });
       }
       setSelectedPrice(null);
       setAmount("");
@@ -106,9 +106,9 @@ export default function SignalPage() {
           {signalPrices.map((price) => (
             <Card key={price._id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle>${price.amount}</CardTitle>
+                <CardTitle>{price.name}</CardTitle>
                 <CardDescription>
-                  +{price.signalValue}% Signal Strength
+                  Price: ${price.price} | +{price.strengthIncrease}% Signal Strength
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -125,28 +125,28 @@ export default function SignalPage() {
                     <DialogHeader>
                       <DialogTitle>Purchase Signal Strength</DialogTitle>
                       <DialogDescription>
-                        Amount: ${price.amount} | Signal Value: +{price.signalValue}%
+                        {price.name} | Price: ${price.price} | Signal Value: +{price.strengthIncrease}%
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="amount">Quantity</Label>
+                        <Label htmlFor="amount">Amount</Label>
                         <Input
                           id="amount"
                           type="number"
                           min="1"
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
-                          placeholder="Enter quantity"
+                          placeholder="Enter amount to purchase"
                         />
                       </div>
                       <div className="p-4 bg-background-dark rounded-lg">
-                        <p className="text-sm text-gray-400">Total Amount:</p>
+                        <p className="text-sm text-gray-400">Total Cost:</p>
                         <p className="text-xl font-bold text-white">
-                          ${amount ? (parseFloat(amount) * price.amount).toFixed(2) : "0.00"}
+                          ${amount ? (parseFloat(amount) * price.price).toFixed(2) : "0.00"}
                         </p>
                         <p className="text-sm text-gray-400 mt-2">
-                          Signal Strength Gain: +{amount ? (parseFloat(amount) * price.signalValue).toFixed(0) : "0"}%
+                          Signal Strength Gain: +{amount ? (parseFloat(amount) * price.strengthIncrease).toFixed(0) : "0"}%
                         </p>
                       </div>
                       <Button

@@ -20,7 +20,9 @@ export default function AdminDepositMethodsPage() {
   const [selectedMethod, setSelectedMethod] = useState<DepositMethod | null>(null);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [formData, setFormData] = useState<CreateDepositMethodRequest>({
-    method: "",
+    name: "",
+    description: "",
+    isActive: true,
   });
 
   useEffect(() => {
@@ -92,7 +94,9 @@ export default function AdminDepositMethodsPage() {
 
   const resetForm = () => {
     setFormData({
-      method: "",
+      name: "",
+      description: "",
+      isActive: true,
     });
   };
 
@@ -100,7 +104,9 @@ export default function AdminDepositMethodsPage() {
     setSelectedMethod(method);
     setIsCreateMode(false);
     setFormData({
-      method: method?.method || "",
+      name: method?.name || "",
+      description: method?.description || "",
+      isActive: method?.isActive ?? true,
     });
   };
 
@@ -152,17 +158,36 @@ export default function AdminDepositMethodsPage() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="method">Method Name</Label>
+                <Label htmlFor="name">Method Name</Label>
                 <Input
-                  id="method"
-                  value={formData.method}
-                  onChange={(e) => setFormData({ ...formData, method: e.target.value })}
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., Bank Transfer, Crypto, PayPal"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Method description"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  className="rounded border-gray-800"
+                />
+                <Label htmlFor="isActive">Active</Label>
+              </div>
               <Button
                 onClick={isCreateMode ? handleCreate : handleUpdate}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !formData.name}
                 className="w-full"
               >
                 {isSubmitting ? "Processing..." : isCreateMode ? "Create Method" : "Update Method"}
@@ -180,21 +205,29 @@ export default function AdminDepositMethodsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Method</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {methods.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={2} className="text-center text-gray-400">
+                  <TableCell colSpan={4} className="text-center text-gray-400">
                     No deposit methods found
                   </TableCell>
                 </TableRow>
               ) : (
                 methods.map((method) => (
                   <TableRow key={method?._id || 'unknown'}>
-                    <TableCell className="font-medium">{method?.method || 'N/A'}</TableCell>
+                    <TableCell className="font-medium">{method?.name || 'N/A'}</TableCell>
+                    <TableCell>{method?.description || 'N/A'}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded text-xs ${method?.isActive ? 'bg-green-500/20 text-green-500' : 'bg-gray-500/20 text-gray-500'}`}>
+                        {method?.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant="outline"

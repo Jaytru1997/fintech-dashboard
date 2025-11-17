@@ -77,7 +77,12 @@ export function Sidebar() {
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          // For base routes (/dashboard, /admin), only match exactly
+          // For other routes, match exactly or if pathname starts with the href + "/"
+          const isBaseRoute = item.href === "/dashboard" || item.href === "/admin";
+          const isActive = isBaseRoute 
+            ? pathname === item.href
+            : pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.href}

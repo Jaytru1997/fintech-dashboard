@@ -28,7 +28,9 @@ export default function AdminRealEstatePage() {
     strategy: "",
     overview: "",
     documents: [],
-    projectBreakdown: "",
+    type: "",
+    kind: "",
+    objective: "",
     whyThisProject: "",
     whyThisSponsor: "",
   });
@@ -109,7 +111,9 @@ export default function AdminRealEstatePage() {
       strategy: "",
       overview: "",
       documents: [],
-      projectBreakdown: "",
+      type: "",
+      kind: "",
+      objective: "",
       whyThisProject: "",
       whyThisSponsor: "",
     });
@@ -126,7 +130,9 @@ export default function AdminRealEstatePage() {
       strategy: property?.strategy || "",
       overview: property?.overview || "",
       documents: property?.documents || [],
-      projectBreakdown: property?.projectBreakdown || "",
+      type: property?.type || "",
+      kind: property?.kind || "",
+      objective: property?.objective || "",
       whyThisProject: property?.whyThisProject || "",
       whyThisSponsor: property?.whyThisSponsor || "",
     });
@@ -236,14 +242,33 @@ export default function AdminRealEstatePage() {
                   placeholder="Property overview"
                 />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="type">Type</Label>
+                  <Input
+                    id="type"
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    placeholder="e.g., Residential, Commercial"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="kind">Kind</Label>
+                  <Input
+                    id="kind"
+                    value={formData.kind}
+                    onChange={(e) => setFormData({ ...formData, kind: e.target.value })}
+                    placeholder="e.g., Apartment, Office"
+                  />
+                </div>
+              </div>
               <div className="space-y-2">
-                <Label htmlFor="projectBreakdown">Project Breakdown</Label>
-                <textarea
-                  id="projectBreakdown"
-                  className="w-full rounded-md border border-gray-800 bg-background px-3 py-2 min-h-[100px]"
-                  value={formData.projectBreakdown}
-                  onChange={(e) => setFormData({ ...formData, projectBreakdown: e.target.value })}
-                  placeholder="Project breakdown details"
+                <Label htmlFor="objective">Objective (Optional)</Label>
+                <Input
+                  id="objective"
+                  value={formData.objective}
+                  onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
+                  placeholder="e.g., Income generation, Capital appreciation"
                 />
               </div>
               <div className="space-y-2">

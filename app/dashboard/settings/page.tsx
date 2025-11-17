@@ -19,7 +19,12 @@ import { useRouter } from "next/navigation";
 import { Shield, Lock, FileText, Upload } from "lucide-react";
 
 const passwordSchema = z.object({
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  newPasswordRepeat: z.string().min(6, "Password must be at least 6 characters"),
+}).refine((data) => data.newPassword === data.newPasswordRepeat, {
+  message: "Passwords don't match",
+  path: ["newPasswordRepeat"],
 });
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
@@ -54,7 +59,11 @@ export default function SettingsPage() {
   const handlePasswordChange = async (data: PasswordFormData) => {
     setIsLoading(true);
     try {
-      await userApi.updateSecurity({ password: data.password });
+      await userApi.updateSecurity({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+        newPasswordRepeat: data.newPasswordRepeat,
+      });
       toast.success("Password updated successfully");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to update password");
@@ -90,18 +99,8 @@ export default function SettingsPage() {
       router.push("/auth/2fa");
       return;
     }
-    setIsLoading(true);
-    try {
-      await userApi.updateSecurity({ twoFactorEnabled: enabled });
-      if (user) {
-        updateUser({ twoFactorEnabled: enabled });
-      }
-      toast.success(`2FA ${enabled ? "enabled" : "disabled"}`);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to update 2FA");
-    } finally {
-      setIsLoading(false);
-    }
+    // Note: 2FA enable/disable is handled through the 2FA setup flow
+    // This toggle just navigates to the setup page
   };
 
   return (
@@ -138,15 +137,39 @@ export default function SettingsPage() {
             <CardContent>
               <form onSubmit={handleSubmit(handlePasswordChange)} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="password">New Password</Label>
+                  <Label htmlFor="currentPassword">Current Password</Label>
                   <Input
-                    id="password"
+                    id="currentPassword"
+                    type="password"
+                    placeholder="Enter current password"
+                    {...register("currentPassword")}
+                  />
+                  {errors.currentPassword && (
+                    <p className="text-sm text-error">{errors.currentPassword.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input
+                    id="newPassword"
                     type="password"
                     placeholder="Enter new password"
-                    {...register("password")}
+                    {...register("newPassword")}
                   />
-                  {errors.password && (
-                    <p className="text-sm text-error">{errors.password.message}</p>
+                  {errors.newPassword && (
+                    <p className="text-sm text-error">{errors.newPassword.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newPasswordRepeat">Repeat New Password</Label>
+                  <Input
+                    id="newPasswordRepeat"
+                    type="password"
+                    placeholder="Repeat new password"
+                    {...register("newPasswordRepeat")}
+                  />
+                  {errors.newPasswordRepeat && (
+                    <p className="text-sm text-error">{errors.newPasswordRepeat.message}</p>
                   )}
                 </div>
                 <Button type="submit" disabled={isLoading}>

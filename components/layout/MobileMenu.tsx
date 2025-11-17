@@ -186,7 +186,12 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           <div className="grid grid-cols-3 gap-4">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              // For base routes (/dashboard, /admin), only match exactly
+              // For other routes, match exactly or if pathname starts with the href + "/"
+              const isBaseRoute = item.href === "/dashboard" || item.href === "/admin";
+              const isActive = isBaseRoute 
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <Link
                   key={item.href}
