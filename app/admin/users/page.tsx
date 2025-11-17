@@ -117,7 +117,8 @@ export default function AdminUsersPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-6 max-w-full overflow-x-hidden"
+      style={{ minWidth: 0 }}
     >
       <div>
         <h1 className="text-2xl font-semibold text-white">Users</h1>
@@ -126,11 +127,11 @@ export default function AdminUsersPage() {
         </p>
       </div>
 
-      <Card>
+      <Card className="overflow-hidden max-w-full">
         <CardHeader>
           <CardTitle>All Users</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="max-w-full" style={{ minWidth: 0 }}>
           <Table>
             <TableHeader>
               <TableRow>

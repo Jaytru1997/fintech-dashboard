@@ -201,7 +201,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                     "group flex flex-col items-center justify-center gap-2 rounded-xl p-4 transition-all",
                     isActive
                       ? "bg-primary text-white shadow-lg shadow-primary/20"
-                      : "bg-background-dark text-gray-300 hover:bg-gray-800 hover:text-white"
+                      : "border-1 border-primary/50 text-gray-300 hover:bg-gray-800 hover:text-white"
                   )}
                 >
                   <div

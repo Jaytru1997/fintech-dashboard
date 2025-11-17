@@ -64,7 +64,8 @@ export default function HistoryPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-6 max-w-full overflow-x-hidden"
+      style={{ minWidth: 0 }}
     >
       <div>
         <h1 className="text-2xl font-semibold flex items-center gap-2 text-white">
@@ -86,11 +87,11 @@ export default function HistoryPage() {
         </TabsList>
 
         <TabsContent value="trades">
-          <Card>
+          <Card className="overflow-hidden max-w-full">
             <CardHeader>
               <CardTitle>Trade History</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="max-w-full" style={{ minWidth: 0 }}>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -154,11 +155,11 @@ export default function HistoryPage() {
         </TabsContent>
 
         <TabsContent value="deposits">
-          <Card>
+          <Card className="overflow-hidden max-w-full">
             <CardHeader>
               <CardTitle>Deposit History</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="max-w-full" style={{ minWidth: 0 }}>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -208,11 +209,11 @@ export default function HistoryPage() {
         </TabsContent>
 
         <TabsContent value="withdrawals">
-          <Card>
+          <Card className="overflow-hidden max-w-full">
             <CardHeader>
               <CardTitle>Withdrawal History</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="max-w-full" style={{ minWidth: 0 }}>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -262,11 +263,11 @@ export default function HistoryPage() {
         </TabsContent>
 
         <TabsContent value="stakings">
-          <Card>
+          <Card className="overflow-hidden max-w-full">
             <CardHeader>
               <CardTitle>Staking History</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="max-w-full" style={{ minWidth: 0 }}>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -314,11 +315,11 @@ export default function HistoryPage() {
         </TabsContent>
 
         <TabsContent value="investments">
-          <Card>
+          <Card className="overflow-hidden max-w-full">
             <CardHeader>
               <CardTitle>Real Estate Investment History</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="max-w-full" style={{ minWidth: 0 }}>
               <Table>
                 <TableHeader>
                   <TableRow>

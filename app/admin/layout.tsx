@@ -15,7 +15,7 @@ export default function AdminLayout({
         <Sidebar />
         <div className="flex-1 flex flex-col lg:ml-64">
           <Navbar />
-          <main className="flex-1 overflow-y-auto p-6 bg-background-darkest">{children}</main>
+          <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 bg-background-darkest max-w-full">{children}</main>
         </div>
       </div>
     </ProtectedRoute>
