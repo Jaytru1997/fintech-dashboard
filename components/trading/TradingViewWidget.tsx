@@ -13,6 +13,55 @@ declare global {
 
 const TRADING_VIEW_SCRIPT_ID = "tradingview-widget-script";
 const TRADING_VIEW_SCRIPT_SRC = "https://s3.tradingview.com/tv.js";
+let tradingViewScriptPromise: Promise<void> | null = null;
+
+const loadTradingViewScript = () => {
+  if (typeof window === "undefined") {
+    return Promise.resolve();
+  }
+
+  if (window.TradingView) {
+    return Promise.resolve();
+  }
+
+  if (tradingViewScriptPromise) {
+    return tradingViewScriptPromise;
+  }
+
+  tradingViewScriptPromise = new Promise<void>((resolve, reject) => {
+    const existingScript = document.getElementById(TRADING_VIEW_SCRIPT_ID) as HTMLScriptElement | null;
+    if (existingScript) {
+      if (existingScript.dataset.loaded === "true") {
+        resolve();
+        return;
+      }
+      existingScript.addEventListener("load", () => resolve(), { once: true });
+      existingScript.addEventListener(
+        "error",
+        (event) => reject(event),
+        { once: true }
+      );
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = TRADING_VIEW_SCRIPT_ID;
+    script.src = TRADING_VIEW_SCRIPT_SRC;
+    script.async = true;
+    script.dataset.loaded = "false";
+    script.addEventListener("load", () => {
+      script.dataset.loaded = "true";
+      resolve();
+    });
+    script.addEventListener("error", (event) => {
+      tradingViewScriptPromise = null;
+      reject(event);
+    });
+    document.head.appendChild(script);
+  });
+
+  return tradingViewScriptPromise;
+};
 
 export interface TradingViewWidgetProps {
   symbol: string;
@@ -80,36 +129,20 @@ export function TradingViewWidget({
   };
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    let isMounted = true;
 
-    if (window.TradingView) {
-      createWidget();
-      return;
-    }
-
-    const existingScript = document.getElementById(TRADING_VIEW_SCRIPT_ID) as HTMLScriptElement | null;
-    if (existingScript) {
-      if (existingScript.dataset.loaded) {
-        createWidget();
-      } else {
-        existingScript.addEventListener("load", createWidget, { once: true });
-      }
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.id = TRADING_VIEW_SCRIPT_ID;
-    script.src = TRADING_VIEW_SCRIPT_SRC;
-    script.async = true;
-    script.dataset.loaded = "false";
-    script.onload = () => {
-      script.dataset.loaded = "true";
-      createWidget();
-    };
-    document.head.appendChild(script);
+    loadTradingViewScript()
+      .then(() => {
+        if (isMounted) {
+          createWidget();
+        }
+      })
+      .catch((error) => {
+        console.error("TradingView script failed to load", error);
+      });
 
     return () => {
-      script.onload = null;
+      isMounted = false;
     };
   }, []);
 

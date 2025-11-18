@@ -255,7 +255,7 @@ export function QuickTradePanel({
 
         <div className="space-y-1 text-[11px] text-gray-400">
           <div className="flex justify-between">
-            <span>Current balance:</span>
+            <span>Trading account balance:</span>
             <span>
               {(prioritizedBalance?.amount ?? 0).toLocaleString()}{" "}
               {prioritizedBalance?.currency || "USD"}

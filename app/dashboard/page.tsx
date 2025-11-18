@@ -22,11 +22,14 @@ import { QuickTradePanel } from "@/components/trading/QuickTradePanel";
 import { TradingViewWidget } from "@/components/trading/TradingViewWidget";
 import { formatPairToTradingViewSymbol } from "@/lib/utils";
 import { getStoredTradePair, setStoredTradePair } from "@/lib/storage/tradePair";
+import type { Trade } from "@/lib/types";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const { balances, setBalances } = useUserStore();
   const [isLoading, setIsLoading] = useState(true);
+  const [isTradesLoading, setIsTradesLoading] = useState(true);
+  const [trades, setTrades] = useState<Trade[]>([]);
   const [chartPair, setChartPair] = useState<string>(getStoredTradePair() || "BTC/USD");
   const chartSymbol = formatPairToTradingViewSymbol(chartPair);
   const selectablePairs = useMemo(() => Array.from(new Set([chartPair, "BTC/USD", "ETH/USD", "SOL/USD"])), [chartPair]);
@@ -59,6 +62,25 @@ export default function DashboardPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    const fetchTrades = async () => {
+      try {
+        const data = await userApi.getTrades();
+        setTrades(Array.isArray(data) ? data : []);
+      } catch (error) {
+        toast.error("Failed to load recent trades");
+        setTrades([]);
+      } finally {
+        setIsTradesLoading(false);
+      }
+    };
+
+    fetchTrades();
+  }, []);
+
+  const openTrades = useMemo(() => trades.filter((trade) => trade.status === "open"), [trades]);
+  const closedTrades = useMemo(() => trades.filter((trade) => trade.status === "closed"), [trades]);
 
   useEffect(() => {
     if (chartPair) {
@@ -112,52 +134,29 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between text-xs text-gray-500">
-              <span className="uppercase tracking-wide">Top Assets</span>
-              <Link href="/dashboard/assets" className="text-primary text-[11px]">
-                View all assets &rsaquo;
+              <span className="uppercase tracking-wide">Vault Snapshot</span>
+              <Link href="/dashboard/balances" className="text-primary text-[11px]">
+                Manage balances &rsaquo;
               </Link>
             </div>
             <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-medium">Bitcoin</p>
-                  <p className="text-gray-500 text-xs">BTC</p>
+              {[
+                { label: "Main Wallet", value: balances?.main },
+                { label: "Trade Vault", value: balances?.trade },
+                { label: "Mining Pool", value: balances?.mining },
+                { label: "Real Estate", value: balances?.realEstate },
+                { label: "Referral Rewards", value: balances?.referral },
+              ].map((entry) => (
+                <div key={entry.label} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white font-medium">{entry.label}</p>
+                    <p className="text-gray-500 text-xs">{entry.value?.currency || "USD"}</p>
+                  </div>
+                  <div className="text-right text-xs text-gray-400">
+                    <p>${(entry.value?.amount ?? 0).toLocaleString()}</p>
+                  </div>
                 </div>
-                <div className="text-right text-xs text-gray-400">
-                  <p>$0.00</p>
-                  <p>0.0000 BTC</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-medium">Ethereum</p>
-                  <p className="text-gray-500 text-xs">ETH</p>
-                </div>
-                <div className="text-right text-xs text-gray-400">
-                  <p>$0.00</p>
-                  <p>0.0000 ETH</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-medium">Solana</p>
-                  <p className="text-gray-500 text-xs">SOL</p>
-                </div>
-                <div className="text-right text-xs text-gray-400">
-                  <p>$0.00</p>
-                  <p>0.0000 SOL</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white font-medium">Apple</p>
-                  <p className="text-gray-500 text-xs">AAPL</p>
-                </div>
-                <div className="text-right text-xs text-gray-400">
-                  <p>$0.00</p>
-                  <p>0.0000 AAPL</p>
-                </div>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -169,7 +168,7 @@ export default function DashboardPage() {
               <div>
                 <p className="text-xs uppercase tracking-wide text-gray-500 flex items-center gap-2">
                   <PieChart className="h-4 w-4" />
-                  Categories
+                  ASSET MANAGEMENT
                 </p>
               </div>
               <Link href="/dashboard/deposits" className="text-primary text-[11px]">
@@ -179,27 +178,18 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-xs text-gray-500">
-              No categories yet. Deposit now to see your portfolio breakdown.
+              Trading on this platform is only available to users over 18 years of age. Please ensure you are of legal age to trade in your jurisdiction. And finally, trade with caution and do your own research.
             </p>
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-gray-400">
-                <span>Trading progress</span>
-                <span>0%</span>
-              </div>
-              <div className="h-1.5 w-full rounded-full bg-gray-800 overflow-hidden">
-                <div className="h-full w-0 bg-emerald-500" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-gray-400">
-                <span>Signal strength</span>
+                <span>Signal Strength</span>
                 <span>{user?.signalStrength || 0}%</span>
               </div>
               <SignalStrengthBar value={user?.signalStrength || 0} />
             </div>
             <div className="space-y-2 pt-2 border-t border-gray-800/60 mt-2">
               <div className="flex items-center justify-between text-xs text-gray-400">
-                <span>KYC Status</span>
+                <span>KYC Verification</span>
                 <span
                   className={`font-medium ${
                     user?.kycStatus === "approved" ? "text-emerald-400" : "text-gray-400"
@@ -209,13 +199,13 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs text-gray-400">
-                <span>2FA</span>
+                <span>Two-Factor Authentication</span>
                 <span
                   className={`font-medium ${
                     user?.twoFactorEnabled ? "text-emerald-400" : "text-gray-400"
                   }`}
                 >
-                  {user?.twoFactorEnabled ? "Enabled" : "Disabled"}
+                  {user?.twoFactorEnabled ? "Enabled" : "Not Enabled"}
                 </span>
               </div>
             </div>
@@ -262,12 +252,70 @@ export default function DashboardPage() {
               </span>
             </div>
             <div className="space-y-3 border-t border-gray-800 pt-3">
-              <p className="text-xs text-gray-500 uppercase">Open (0)</p>
-              <p className="text-xs text-gray-500">No open trades yet.</p>
+              <p className="text-xs text-gray-500 uppercase">
+                Open ({openTrades.length})
+              </p>
+              {isTradesLoading ? (
+                <p className="text-xs text-gray-500">Loading trades...</p>
+              ) : openTrades.length === 0 ? (
+                <p className="text-xs text-gray-500">No open trades yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {openTrades.slice(0, 3).map((trade) => (
+                    <div key={trade._id} className="flex items-center justify-between text-xs">
+                      <div>
+                        <p className="text-white font-medium">{trade.pair}</p>
+                        <p className="text-gray-500 text-[11px]">
+                          {trade.direction} • {new Date(trade.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p
+                          className={`text-[11px] ${
+                            trade.direction === "BUY" ? "text-emerald-400" : "text-error"
+                          }`}
+                        >
+                          {trade.direction}
+                        </p>
+                        <p>${trade.amount.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="space-y-3 border-t border-gray-800 pt-3">
-              <p className="text-xs text-gray-500 uppercase">Closed (0)</p>
-              <p className="text-xs text-gray-500">No closed trades yet.</p>
+              <p className="text-xs text-gray-500 uppercase">
+                Closed ({closedTrades.length})
+              </p>
+              {isTradesLoading ? (
+                <p className="text-xs text-gray-500">Loading trades...</p>
+              ) : closedTrades.length === 0 ? (
+                <p className="text-xs text-gray-500">No closed trades yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {closedTrades.slice(0, 3).map((trade) => (
+                    <div key={trade._id} className="flex items-center justify-between text-xs">
+                      <div>
+                        <p className="text-white font-medium">{trade.pair}</p>
+                        <p className="text-gray-500 text-[11px]">
+                          {trade.direction} • {new Date(trade.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p
+                          className={`text-[11px] ${
+                            trade.result === "win" ? "text-emerald-400" : "text-error"
+                          }`}
+                        >
+                          {trade.result ? trade.result.toUpperCase() : trade.direction}
+                        </p>
+                        <p>${trade.amount.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
