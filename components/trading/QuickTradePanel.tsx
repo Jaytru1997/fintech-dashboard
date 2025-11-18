@@ -21,7 +21,7 @@ interface QuickTradeState {
   pair: string;
   amount: string;
   leverage: string;
-  durationHours: string;
+  durationMinutes: string;
   takeProfit: string;
   stopLoss: string;
   isSwap: boolean;
@@ -54,7 +54,7 @@ export function QuickTradePanel({
     pair: initialPair,
     amount: "100",
     leverage: "5",
-    durationHours: "1",
+    durationMinutes: "60",
     takeProfit: "",
     stopLoss: "",
     isSwap: false,
@@ -152,9 +152,9 @@ export function QuickTradePanel({
       toast.error("Enter a valid amount to trade");
       return;
     }
-    const duration = parseFloat(quickTrade.durationHours);
+    const duration = parseFloat(quickTrade.durationMinutes);
     if (!duration || duration <= 0) {
-      toast.error("Enter a valid duration in hours");
+      toast.error("Enter a valid duration in minutes");
       return;
     }
 
@@ -356,16 +356,16 @@ export function QuickTradePanel({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="qt-duration">Duration (hours)</Label>
+          <Label htmlFor="qt-duration">Duration (minutes)</Label>
           <Input
             id="qt-duration"
             type="number"
-            min="0.1"
-            step="0.1"
+            min="1"
+            step="1"
             className="h-9 text-xs"
-            value={quickTrade.durationHours}
-            onChange={(e) => setQuickTrade((prev) => ({ ...prev, durationHours: e.target.value }))}
-            placeholder="e.g., 1"
+            value={quickTrade.durationMinutes}
+            onChange={(e) => setQuickTrade((prev) => ({ ...prev, durationMinutes: e.target.value }))}
+            placeholder="e.g., 15"
             required
           />
         </div>

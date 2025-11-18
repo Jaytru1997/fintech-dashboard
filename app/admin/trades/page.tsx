@@ -12,14 +12,26 @@ import { Trade } from "@/lib/types";
 import { toast } from "react-toastify";
 import { Edit } from "lucide-react";
 
+type TradeStatus = "" | "open" | "closed" | "canceled";
+type TradeResult = "" | "win" | "loss";
+
+const TRADE_STATUSES: TradeStatus[] = ["", "open", "closed", "canceled"];
+const TRADE_RESULTS: TradeResult[] = ["", "win", "loss"];
+
+const isTradeStatus = (value: string): value is TradeStatus =>
+  TRADE_STATUSES.includes(value as TradeStatus);
+
+const isTradeResult = (value: string): value is TradeResult =>
+  TRADE_RESULTS.includes(value as TradeResult);
+
 export default function AdminTradesPage() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<{
-    status: "" | "open" | "closed" | "canceled";
-    result: "" | "win" | "loss";
+    status: TradeStatus;
+    result: TradeResult;
   }>({
     status: "",
     result: "",
@@ -43,6 +55,16 @@ export default function AdminTradesPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleStatusChange = (value: string) => {
+    if (!isTradeStatus(value)) return;
+    setFormData((prev) => ({ ...prev, status: value }));
+  };
+
+  const handleResultChange = (value: string) => {
+    if (!isTradeResult(value)) return;
+    setFormData((prev) => ({ ...prev, result: value }));
   };
 
   const handleUpdateTrade = async () => {
@@ -177,12 +199,7 @@ export default function AdminTradesPage() {
                           <div className="space-y-4">
                             <div className="space-y-2">
                               <label className="text-sm font-medium">Status</label>
-                              <Select
-                                value={formData.status}
-                                onValueChange={(value) =>
-                                  setFormData({ ...formData, status: value })
-                                }
-                              >
+                              <Select value={formData.status} onValueChange={handleStatusChange}>
                                 <SelectTrigger>
                                   <SelectValue />
                                 </SelectTrigger>
@@ -195,12 +212,7 @@ export default function AdminTradesPage() {
                             </div>
                             <div className="space-y-2">
                               <label className="text-sm font-medium">Result</label>
-                              <Select
-                                value={formData.result}
-                                onValueChange={(value) =>
-                                  setFormData({ ...formData, result: value as "win" | "loss" | "" })
-                                }
-                              >
+                              <Select value={formData.result} onValueChange={handleResultChange}>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select result" />
                                 </SelectTrigger>
