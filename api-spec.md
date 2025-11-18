@@ -70,6 +70,7 @@ Only the fields declared in each DTO are accepted by the controllers. Types and 
 
 **SubscribeDto**
 - `planId`: MongoId string, required
+- `amount`: number > 0, required — must fall within the plan’s `minAmount`/`maxAmount` range
 
 **StakeDto**
 - `poolId`: MongoId string, required
@@ -117,8 +118,8 @@ Only the fields declared in each DTO are accepted by the controllers. Types and 
 - Update version: all fields optional
 
 **Create/UpdateSubscriptionPlanDto**
-- Create requires: `name`, `minAmount` >= 0, `maxAmount` >= 0
-- Update version: all optional
+- Create requires: `name`, `minAmount` >= 0, `maxAmount` >= 0, `roi` >= 0, `durationDays` >= 1
+- Update version: all optional (`roi`/`durationDays` included)
 
 **Create/UpdateSignalPriceDto**
 - Create requires: `amount` >= 0, `signalValue` >= 0
@@ -141,6 +142,16 @@ Only the fields declared in each DTO are accepted by the controllers. Types and 
 **UpdateTradeDto**
 - `status`: enum `'open' | 'closed' | 'canceled'`, optional
 - `result`: enum `'win' | 'loss'`, optional
+
+**ExecuteTradeDto**
+- All `TradeDto` fields (tradeType, pair, amount, leverage, duration, direction, plus optional takeProfit/stopLoss/isSwap/swapPair) plus:
+- `userId`: MongoId string, required — target user whose balances are debited.
+- `result`: enum `'win' | 'loss'`, required — trade is settled immediately using the same profit/loss logic as `UpdateTradeDto`.
+
+### Shared DTOs
+
+**UpdateSubscriptionStatusDto**
+- `status`: enum `'active' | 'pending' | 'completed' | 'canceled' | 'cancelled'`
 
 ---
 
@@ -176,7 +187,7 @@ All routes require a valid user JWT.
 - `PATCH /user/currency`  body `UpdateCurrencyDto`.
 
 #### Product Actions
-- `POST /user/subscribe`  body `SubscribeDto`.
+- `POST /user/subscribe`  body `SubscribeDto` — debits the specified amount (must be between plan min/max) and stores it with the subscription alongside the plan’s ROI/duration metadata.
 - `POST /user/signal/purchase`  body `PurchaseSignalDto`.
 - `POST /user/stake`  body `StakeDto`.
 - `POST /user/trade`  body `TradeDto`.
@@ -184,6 +195,11 @@ All routes require a valid user JWT.
 - `POST /user/deposit`  multipart form: `methodId`, `amount`, `currency`, plus `proof` file saved to `/uploads/deposits/`.
 - `POST /user/withdrawal`  body `WithdrawalDto`.
 - `POST /user/copy-trader/follow` & `POST /user/copy-trader/unfollow`  JSON `{ "traderId": "<CopyTrader _id>" }`.
+
+#### Subscriptions
+- `GET /user/subscription-plans` returns the authenticated user's subscription entries (newest first). Each item matches `{ _id, planId, plan, planName, amount, roi, durationDays, status ('active' | 'pending' | 'completed' | 'canceled' | 'cancelled'), startDate, endDate, createdAt, updatedAt }`.
+- `PATCH /user/subscription-plans/:subscriptionId/status` body `UpdateSubscriptionStatusDto`; allows users to cancel, complete, or pend their own subscriptions (reactivation is restricted to admins).
+- `GET /user/subscription-plans/available` lists the catalog of plans (same as before; returns `SubscriptionPlan` documents).
 
 #### Retrieval
 - Activity feeds: `GET /user/trades`, `/user/deposits`, `/user/withdrawals`, `/user/stakings`, `/user/real-estate-investments`.
@@ -228,9 +244,11 @@ Every admin route requires `JwtAuthGuard` + `RolesGuard` (`@Admin()` decorator).
 #### Users & Trades
 - `GET /admin/users`, `GET /admin/users/:id`.
 - `PATCH /admin/users/:id`  body `UpdateUserDto`.
+- `PATCH /admin/users/:userId/subscriptions/:subscriptionId` body `UpdateSubscriptionStatusDto`; admins can set any status (including reactivation) on a specific user subscription.
 - `POST /admin/users/:id/kyc/approve` and `/reject`.
 - `GET /admin/trades`.
-- `PATCH /admin/trades/:id`  body `UpdateTradeDto`; setting `result` triggers balance adjustments in `AdminService`.
+- `POST /admin/trades/execute` body `ExecuteTradeDto`; debits the user's main balance, records the trade, applies the provided win/loss outcome immediately, and moves funds back into the correct balances.
+- `PATCH /admin/trades/:id`  body `UpdateTradeDto`; setting `result` triggers the same profit/loss settlement as above.
 
 ---
 

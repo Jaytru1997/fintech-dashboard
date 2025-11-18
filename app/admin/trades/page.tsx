@@ -7,8 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { adminApi } from "@/lib/api/endpoints";
-import { Trade } from "@/lib/types";
+import { AdminUser, ExecuteTradeRequest, Trade } from "@/lib/types";
 import { toast } from "react-toastify";
 import { Edit } from "lucide-react";
 
@@ -29,6 +32,10 @@ export default function AdminTradesPage() {
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExecuteDialogOpen, setIsExecuteDialogOpen] = useState(false);
+  const [isExecutingTrade, setIsExecutingTrade] = useState(false);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [formData, setFormData] = useState<{
     status: TradeStatus;
     result: TradeResult;
@@ -36,9 +43,37 @@ export default function AdminTradesPage() {
     status: "",
     result: "",
   });
+  const [executeForm, setExecuteForm] = useState<{
+    userId: string;
+    tradeType: string;
+    pair: string;
+    amount: string;
+    leverage: string;
+    duration: string;
+    direction: "BUY" | "SELL";
+    takeProfit: string;
+    stopLoss: string;
+    isSwap: boolean;
+    swapPair: string;
+    result: TradeResult;
+  }>({
+    userId: "",
+    tradeType: "",
+    pair: "",
+    amount: "",
+    leverage: "",
+    duration: "",
+    direction: "BUY",
+    takeProfit: "",
+    stopLoss: "",
+    isSwap: false,
+    swapPair: "",
+    result: "",
+  });
 
   useEffect(() => {
     loadTrades();
+    loadUsers();
   }, []);
 
   const loadTrades = async () => {
@@ -57,6 +92,20 @@ export default function AdminTradesPage() {
     }
   };
 
+  const loadUsers = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const response = await adminApi.getUsers();
+      setUsers(Array.isArray(response) ? response : []);
+    } catch (error: any) {
+      console.error("Error loading users:", error);
+      toast.error(error.response?.data?.message || error.message || "Failed to load users");
+      setUsers([]);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
   const handleStatusChange = (value: string) => {
     if (!isTradeStatus(value)) return;
     setFormData((prev) => ({ ...prev, status: value }));
@@ -65,6 +114,102 @@ export default function AdminTradesPage() {
   const handleResultChange = (value: string) => {
     if (!isTradeResult(value)) return;
     setFormData((prev) => ({ ...prev, result: value }));
+  };
+
+  const resetExecuteForm = () =>
+    setExecuteForm({
+      userId: "",
+      tradeType: "",
+      pair: "",
+      amount: "",
+      leverage: "",
+      duration: "",
+      direction: "BUY",
+      takeProfit: "",
+      stopLoss: "",
+      isSwap: false,
+      swapPair: "",
+      result: "",
+    });
+
+  const closeExecuteDialog = () => {
+    setIsExecuteDialogOpen(false);
+    resetExecuteForm();
+  };
+
+  const handleExecuteTrade = async () => {
+    if (!executeForm.userId) {
+      toast.error("Select a user to execute the trade for");
+      return;
+    }
+    if (!executeForm.tradeType.trim() || !executeForm.pair.trim()) {
+      toast.error("Trade type and pair are required");
+      return;
+    }
+    if (!executeForm.result) {
+      toast.error("Select a trade result");
+      return;
+    }
+
+    const amountValue = parseFloat(executeForm.amount);
+    const leverageValue = parseFloat(executeForm.leverage);
+    const durationValue = parseFloat(executeForm.duration);
+    const takeProfitValue = parseFloat(executeForm.takeProfit);
+    const stopLossValue = parseFloat(executeForm.stopLoss);
+
+    if (Number.isNaN(amountValue) || amountValue <= 0) {
+      toast.error("Enter a valid amount greater than zero");
+      return;
+    }
+    if (Number.isNaN(leverageValue) || leverageValue < 0 || leverageValue > 100) {
+      toast.error("Leverage must be between 0 and 100");
+      return;
+    }
+    if (Number.isNaN(durationValue) || durationValue <= 0) {
+      toast.error("Duration must be greater than zero");
+      return;
+    }
+    if (executeForm.isSwap && !executeForm.swapPair.trim()) {
+      toast.error("Swap pair is required when swap mode is enabled");
+      return;
+    }
+
+    const payload: ExecuteTradeRequest = {
+      userId: executeForm.userId,
+      tradeType: executeForm.tradeType.trim(),
+      pair: executeForm.pair.trim(),
+      amount: amountValue,
+      leverage: leverageValue,
+      duration: durationValue,
+      direction: executeForm.direction,
+      result: executeForm.result as "win" | "loss",
+    };
+
+    if (!Number.isNaN(takeProfitValue)) {
+      payload.takeProfit = takeProfitValue;
+    }
+    if (!Number.isNaN(stopLossValue)) {
+      payload.stopLoss = stopLossValue;
+    }
+    if (executeForm.isSwap) {
+      payload.isSwap = true;
+      payload.swapPair = executeForm.swapPair.trim();
+    } else if (executeForm.isSwap === false) {
+      payload.isSwap = false;
+    }
+
+    setIsExecutingTrade(true);
+    try {
+      await adminApi.executeTrade(payload);
+      toast.success("Trade executed successfully");
+      closeExecuteDialog();
+      loadTrades();
+    } catch (error: any) {
+      console.error("Error executing trade:", error);
+      toast.error(error.response?.data?.message || "Failed to execute trade");
+    } finally {
+      setIsExecutingTrade(false);
+    }
   };
 
   const handleUpdateTrade = async () => {
@@ -101,12 +246,197 @@ export default function AdminTradesPage() {
       className="space-y-6 max-w-full overflow-x-hidden"
       style={{ minWidth: 0 }}
     >
-      <div>
-        <h1 className="text-2xl font-semibold text-white">Trades</h1>
-        <p className="text-gray-400 mt-2">
-          Manage all platform trades
-        </p>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">Trades</h1>
+          <p className="text-gray-400 mt-2">
+            Manage all platform trades
+          </p>
+        </div>
+        <Button onClick={() => setIsExecuteDialogOpen(true)}>
+          Execute Trade
+        </Button>
       </div>
+      <Dialog open={isExecuteDialogOpen} onOpenChange={(open) => (open ? setIsExecuteDialogOpen(true) : closeExecuteDialog())}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Execute Trade</DialogTitle>
+            <DialogDescription>
+              Execute a trade immediately for a selected user and settle the result.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>User</Label>
+              <Select
+                value={executeForm.userId}
+                onValueChange={(value) => setExecuteForm((prev) => ({ ...prev, userId: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={isLoadingUsers ? "Loading users..." : "Select a user"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user) => (
+                    <SelectItem key={user._id} value={user._id}>
+                      {user.firstName} {user.lastName} ({user.email})
+                    </SelectItem>
+                  ))}
+                  {users.length === 0 && !isLoadingUsers && (
+                    <SelectItem value="no-users" disabled>
+                      No users available
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tradeType">Trade Type</Label>
+                <Input
+                  id="tradeType"
+                  value={executeForm.tradeType}
+                  onChange={(e) => setExecuteForm((prev) => ({ ...prev, tradeType: e.target.value }))}
+                  placeholder="e.g. Spot"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pair">Pair</Label>
+                <Input
+                  id="pair"
+                  value={executeForm.pair}
+                  onChange={(e) => setExecuteForm((prev) => ({ ...prev, pair: e.target.value }))}
+                  placeholder="e.g. BTC/USD"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={executeForm.amount}
+                  onChange={(e) => setExecuteForm((prev) => ({ ...prev, amount: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="leverage">Leverage (0-100)</Label>
+                <Input
+                  id="leverage"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={executeForm.leverage}
+                  onChange={(e) => setExecuteForm((prev) => ({ ...prev, leverage: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration (hours)</Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={executeForm.duration}
+                  onChange={(e) => setExecuteForm((prev) => ({ ...prev, duration: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Direction</Label>
+                <Select
+                  value={executeForm.direction}
+                  onValueChange={(value: "BUY" | "SELL") =>
+                    setExecuteForm((prev) => ({ ...prev, direction: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BUY">Buy</SelectItem>
+                    <SelectItem value="SELL">Sell</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Result</Label>
+                <Select
+                  value={executeForm.result}
+                  onValueChange={(value) => setExecuteForm((prev) => ({ ...prev, result: value as TradeResult }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select result" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="win">Win</SelectItem>
+                    <SelectItem value="loss">Loss</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="takeProfit">Take Profit</Label>
+                <Input
+                  id="takeProfit"
+                  type="number"
+                  step="0.01"
+                  value={executeForm.takeProfit}
+                  onChange={(e) => setExecuteForm((prev) => ({ ...prev, takeProfit: e.target.value }))}
+                  placeholder="Optional"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stopLoss">Stop Loss</Label>
+                <Input
+                  id="stopLoss"
+                  type="number"
+                  step="0.01"
+                  value={executeForm.stopLoss}
+                  onChange={(e) => setExecuteForm((prev) => ({ ...prev, stopLoss: e.target.value }))}
+                  placeholder="Optional"
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-md border border-border px-4 py-3">
+              <div>
+                <Label htmlFor="isSwap">Enable Swap</Label>
+                <p className="text-xs text-gray-400">Toggle if this trade is a swap and requires an alternate pair.</p>
+              </div>
+              <Switch
+                id="isSwap"
+                checked={executeForm.isSwap}
+                onCheckedChange={(checked) =>
+                  setExecuteForm((prev) => ({
+                    ...prev,
+                    isSwap: checked,
+                    swapPair: checked ? prev.swapPair : "",
+                  }))
+                }
+              />
+            </div>
+            {executeForm.isSwap && (
+              <div className="space-y-2">
+                <Label htmlFor="swapPair">Swap Pair</Label>
+                <Input
+                  id="swapPair"
+                  value={executeForm.swapPair}
+                  onChange={(e) => setExecuteForm((prev) => ({ ...prev, swapPair: e.target.value }))}
+                  placeholder="e.g. ETH/USD"
+                />
+              </div>
+            )}
+            <Button onClick={handleExecuteTrade} disabled={isExecutingTrade} className="w-full">
+              {isExecutingTrade ? "Executing..." : "Execute Trade"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Card className="overflow-hidden max-w-full">
         <CardHeader>

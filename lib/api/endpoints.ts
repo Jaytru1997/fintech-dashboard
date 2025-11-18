@@ -16,6 +16,7 @@ import type {
   MiningPool,
   RealEstate,
   SubscriptionPlan,
+  UserSubscription,
   SignalPrice,
   CopyTrader,
   DepositMethod,
@@ -38,6 +39,8 @@ import type {
   UpdateWithdrawalStatusRequest,
   UpdateUserRequest,
   AdminUser,
+  ExecuteTradeRequest,
+  UpdateSubscriptionStatusRequest,
 } from "@/lib/types";
 
 const multipartHeaders = { headers: { "Content-Type": "multipart/form-data" } };
@@ -133,8 +136,15 @@ export const userApi = {
     api.get("/user/withdrawal-methods"),
   getMiningPools: (): Promise<MiningPool[]> => api.get("/user/mining-pools"),
   getRealEstate: (): Promise<RealEstate[]> => api.get("/user/real-estate"),
-  getSubscriptionPlans: (): Promise<SubscriptionPlan[]> =>
+  getAvailableSubscriptionPlans: (): Promise<SubscriptionPlan[]> =>
+    api.get("/user/subscription-plans/available"),
+  getSubscriptions: (): Promise<UserSubscription[]> =>
     api.get("/user/subscription-plans"),
+  updateSubscriptionStatus: (
+    subscriptionId: string,
+    data: UpdateSubscriptionStatusRequest
+  ): Promise<UserSubscription> =>
+    api.patch(`/user/subscription-plans/${subscriptionId}/status`, data),
   getSignalPrices: (): Promise<SignalPrice[]> =>
     api.get("/user/signal-prices"),
   getCopyTraders: (): Promise<CopyTrader[]> =>
@@ -231,6 +241,8 @@ export const adminApi = {
   rejectKYC: (id: string): Promise<void> =>
     api.post(`/admin/users/${id}/kyc/reject`),
   getTrades: (): Promise<Trade[]> => api.get("/admin/trades"),
+  executeTrade: (data: ExecuteTradeRequest): Promise<Trade> =>
+    api.post("/admin/trades/execute", data),
   updateTrade: (
     id: string,
     data: {

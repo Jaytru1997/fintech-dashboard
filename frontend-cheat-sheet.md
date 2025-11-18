@@ -45,11 +45,19 @@ Every endpoint below includes method, path, auth requirements, payload structure
 
 | Method | Path | Body |
 | --- | --- | --- |
-| POST | `/user/subscribe` | ```json { "planId": "string(ObjectId)" }``` |
+| POST | `/user/subscribe` | ```json { "planId": "string(ObjectId)", "amount": "number>0" }``` (amount must be between the plan’s min/max; deducted from main balance and stored on the subscription record alongside ROI/duration data) |
 | POST | `/user/signal/purchase` | ```json { "signalPriceId": "string(ObjectId)", "amount": "number>=0" }``` |
 | POST | `/user/stake` | ```json { "poolId": "string(ObjectId)", "amount": "number>=0" }``` |
 | POST | `/user/trade` | ```json { "tradeType": "string", "pair": "string", "amount": "number>=0", "leverage": "number(0-100)", "takeProfit?": "number", "stopLoss?": "number", "duration": "number(hours)", "direction": "string(enum: BUY|SELL)", "isSwap?": "boolean", "swapPair?": "string" }``` (if `isSwap=true`, UI should require `swapPair`) |
 | POST | `/user/real-estate/invest` | ```json { "realEstateId": "string(ObjectId)", "amount": "number>=0", "duration": "number>=1 (months)" }``` |
+
+### Subscriptions
+
+| Method | Path | Body / Notes |
+| --- | --- | --- |
+| GET | `/user/subscription-plans` | _none_. Returns array of `{ _id, planId, plan, planName, amount, roi, durationDays, status, startDate, endDate, createdAt, updatedAt }`. |
+| PATCH | `/user/subscription-plans/:subscriptionId/status` | ```json { "status": "string(enum: active|pending|completed|canceled|cancelled)" }``` (users should stick to cancel/pending/completed; reactivating to `active` is blocked server-side). |
+| GET | `/user/subscription-plans/available` | _none_. Lists catalog plans (same as before). |
 
 ### Deposits & Withdrawals
 
@@ -98,8 +106,8 @@ Every endpoint below includes method, path, auth requirements, payload structure
 
 | Method | Path | Body |
 | --- | --- | --- |
-| POST | `/admin/subscription-plan` | ```json { "name": "string", "minAmount": "number>=0", "maxAmount": "number>=0" }``` |
-| PATCH | `/admin/subscription-plan/:id` | optional fields |
+| POST | `/admin/subscription-plan` | ```json { "name": "string", "minAmount": "number>=0", "maxAmount": "number>=0", "roi": "number>=0", "durationDays": "number>=1" }``` |
+| PATCH | `/admin/subscription-plan/:id` | optional fields (including `roi` and `durationDays`) |
 | POST | `/admin/signal-price` | ```json { "amount": "number>=0", "signalValue": "number>=0" }``` |
 | PATCH | `/admin/signal-price/:id` | optional fields |
 
@@ -131,8 +139,10 @@ Every endpoint below includes method, path, auth requirements, payload structure
 | PATCH | `/admin/users/:id` | ```json { "mainBalance?": "number>=0", "miningBalance?": "number>=0", "tradeBalance?": "number>=0", "realEstateBalance?": "number>=0", "referralBalance?": "number>=0", "signalStrength?": "number(0-100)", "kycStatus?": "string(enum: pending|approved|rejected)", "isAdmin?": "boolean" }``` |
 | POST | `/admin/users/:id/kyc/approve` | _none_ |
 | POST | `/admin/users/:id/kyc/reject` | _none_ |
+| PATCH | `/admin/users/:userId/subscriptions/:subscriptionId` | ```json { "status": "string(enum: active|pending|completed|canceled|cancelled)" }``` |
 | GET | `/admin/trades` | _none_ |
-| PATCH | `/admin/trades/:id` | ```json { "status?": "string(enum: open|closed|canceled)", "result?": "string(enum: win|loss)" }``` (result change triggers profit/loss adjustments). |
+| POST | `/admin/trades/execute` | ```json { "userId": "string(ObjectId)", "tradeType": "string", "pair": "string", "amount": "number>=0", "leverage": "number(0-100)", "duration": "number(hours)", "direction": "string(enum: BUY|SELL)", "takeProfit?": "number", "stopLoss?": "number", "isSwap?": "boolean", "swapPair?": "string", "result": "string(enum: win|loss)" }``` (debids user's main balance, records trade, and immediately applies the given result with profit/loss settlement.) |
+| PATCH | `/admin/trades/:id` | ```json { "status?": "string(enum: open|closed|canceled)", "result?": "string(enum: win|loss)" }``` (changing `result` runs the same settlement logic as execute). |
 
 ---
 

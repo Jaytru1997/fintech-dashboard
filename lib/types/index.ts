@@ -160,6 +160,23 @@ export interface SubscriptionPlan {
   name: string;
   minAmount: number;
   maxAmount: number;
+  roi: number;
+  durationDays: number;
+}
+
+export interface UserSubscription {
+  _id: string;
+  planId?: string | SubscriptionPlan;
+  plan?: SubscriptionPlan;
+  planName?: string;
+  amount?: number;
+  roi?: number;
+  durationDays?: number;
+  status?: "active" | "pending" | "completed" | "canceled" | "cancelled" | string;
+  startDate?: string;
+  endDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SignalPrice {
@@ -211,6 +228,11 @@ export interface UpdateSecurityRequest {
 
 export interface SubscribeRequest {
   planId: string;
+  amount: number;
+}
+
+export interface UpdateSubscriptionStatusRequest {
+  status: "active" | "pending" | "completed" | "canceled" | "cancelled";
 }
 
 export interface PurchaseSignalRequest {
@@ -234,6 +256,11 @@ export interface TradeRequest {
   direction: "BUY" | "SELL";
   isSwap?: boolean;
   swapPair?: string;
+}
+
+export interface ExecuteTradeRequest extends TradeRequest {
+  userId: string;
+  result: "win" | "loss";
 }
 
 export interface RealEstateInvestRequest {
@@ -297,6 +324,8 @@ export interface CreateSubscriptionPlanRequest {
   name: string;
   minAmount: number;
   maxAmount: number;
+  roi: number;
+  durationDays: number;
 }
 
 export interface CreateSignalPriceRequest {

@@ -23,6 +23,8 @@ export default function AdminSubscriptionsPage() {
     name: "",
     minAmount: 0,
     maxAmount: 0,
+    roi: 0,
+    durationDays: 1,
   });
 
   useEffect(() => {
@@ -97,6 +99,8 @@ export default function AdminSubscriptionsPage() {
       name: "",
       minAmount: 0,
       maxAmount: 0,
+      roi: 0,
+      durationDays: 1,
     });
   };
 
@@ -107,6 +111,8 @@ export default function AdminSubscriptionsPage() {
       name: plan?.name || "",
       minAmount: plan?.minAmount || 0,
       maxAmount: plan?.maxAmount || 0,
+      roi: plan?.roi || 0,
+      durationDays: plan?.durationDays || 1,
     });
   };
 
@@ -194,6 +200,34 @@ export default function AdminSubscriptionsPage() {
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="roi">ROI (%)</Label>
+                  <Input
+                    id="roi"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.roi}
+                    onChange={(e) =>
+                      setFormData({ ...formData, roi: parseFloat(e.target.value) || 0 })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="durationDays">Duration (days)</Label>
+                  <Input
+                    id="durationDays"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={formData.durationDays}
+                    onChange={(e) =>
+                      setFormData({ ...formData, durationDays: Math.max(1, parseInt(e.target.value, 10) || 1) })
+                    }
+                  />
+                </div>
+              </div>
               <Button
                 onClick={isCreateMode ? handleCreate : handleUpdate}
                 disabled={
@@ -201,7 +235,9 @@ export default function AdminSubscriptionsPage() {
                   !formData.name ||
                   formData.minAmount < 0 ||
                   formData.maxAmount <= 0 ||
-                  formData.minAmount >= formData.maxAmount
+                  formData.minAmount >= formData.maxAmount ||
+                  formData.roi < 0 ||
+                  formData.durationDays < 1
                 }
                 className="w-full"
               >
@@ -223,13 +259,15 @@ export default function AdminSubscriptionsPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Min Amount</TableHead>
                 <TableHead>Max Amount</TableHead>
+                <TableHead>ROI (%)</TableHead>
+                <TableHead>Duration (days)</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {plans.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-gray-400">
+                  <TableCell colSpan={6} className="text-center text-gray-400">
                     No subscription plans found
                   </TableCell>
                 </TableRow>
@@ -239,6 +277,8 @@ export default function AdminSubscriptionsPage() {
                     <TableCell className="font-medium">{plan?.name || 'N/A'}</TableCell>
                     <TableCell>${(plan?.minAmount ?? 0).toLocaleString()}</TableCell>
                     <TableCell>${(plan?.maxAmount ?? 0).toLocaleString()}</TableCell>
+                      <TableCell>{plan?.roi ?? 0}%</TableCell>
+                      <TableCell>{plan?.durationDays ?? 0}</TableCell>
                     <TableCell>
                       <Button
                         variant="outline"
