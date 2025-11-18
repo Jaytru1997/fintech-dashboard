@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { userApi } from "@/lib/api/endpoints";
@@ -12,6 +13,20 @@ import { Copy, TrendingUp } from "lucide-react";
 export default function CopyTradingPage() {
   const [traders, setTraders] = useState<CopyTrader[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const getImageUrl = (imagePath?: string): string => {
+    if (!imagePath) return "";
+    // If already a full URL, return as-is
+    if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+      return imagePath;
+    }
+    // Otherwise, prefix with API base URL
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:10000";
+    // Remove trailing slash from API URL if present, and ensure image path starts with /
+    const baseUrl = apiUrl.replace(/\/$/, "");
+    const path = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+    return `${baseUrl}${path}`;
+  };
 
   useEffect(() => {
     loadTraders();
@@ -75,7 +90,17 @@ export default function CopyTradingPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {traders.map((trader) => (
-          <Card key={trader._id} className="hover:shadow-lg transition-shadow">
+          <Card key={trader._id} className="hover:shadow-lg transition-shadow overflow-hidden">
+            {trader.image && (
+              <div className="relative h-48 w-full">
+                <Image
+                  src={getImageUrl(trader.image)}
+                  alt={trader.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            )}
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Copy className="h-5 w-5" />
