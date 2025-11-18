@@ -47,8 +47,11 @@ export default function AdminWithdrawalsPage() {
   };
 
   const handleStatusUpdate = async (id: string, status: "approved" | "rejected") => {
+    const adminNotes = typeof window !== "undefined"
+      ? window.prompt("Add admin notes (optional)") || undefined
+      : undefined;
     try {
-      await adminApi.updateWithdrawalStatus(id, { status });
+      await adminApi.updateWithdrawalStatus(id, { status, adminNotes });
       toast.success(`Withdrawal ${status}`);
       loadWithdrawals();
     } catch (error: any) {

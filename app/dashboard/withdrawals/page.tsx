@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,11 @@ export default function WithdrawalsPage() {
     },
     withdrawalCode: "",
   });
+
+  const selectedMethod = useMemo(
+    () => methods.find((method) => method._id === formData.methodId),
+    [methods, formData.methodId]
+  );
 
   useEffect(() => {
     loadData();
@@ -243,6 +248,38 @@ export default function WithdrawalsPage() {
                       Some withdrawal methods may require a code. Contact support if needed.
                     </p>
                   </div>
+
+                {selectedMethod && (
+                  <div className="md:col-span-2 rounded-lg border border-gray-800 bg-background/40 p-4 space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-white">
+                        {selectedMethod.name} details
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1 capitalize">
+                        Type: {selectedMethod.type?.replace(/_/g, " ") || "N/A"}
+                      </p>
+                    </div>
+                    {selectedMethod.details && Object.keys(selectedMethod.details).length > 0 ? (
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {Object.entries(selectedMethod.details).map(([key, value]) => (
+                          <div key={key} className="rounded border border-gray-800 p-2">
+                            <p className="text-[11px] uppercase tracking-wide text-gray-500">
+                              {key
+                                .replace(/([A-Z])/g, " $1")
+                                .replace(/_/g, " ")
+                                .trim()}
+                            </p>
+                            <p className="text-sm text-white break-words">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500">
+                        No structured details provided for this method.
+                      </p>
+                    )}
+                  </div>
+                )}
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isSubmitting || !formData.methodId || !formData.amount}>

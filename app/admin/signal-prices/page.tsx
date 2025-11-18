@@ -20,9 +20,8 @@ export default function AdminSignalPricesPage() {
   const [selectedPrice, setSelectedPrice] = useState<SignalPrice | null>(null);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [formData, setFormData] = useState<CreateSignalPriceRequest>({
-    name: "",
-    price: 0,
-    strengthIncrease: 0,
+    amount: 0,
+    signalValue: 0,
   });
 
   useEffect(() => {
@@ -94,9 +93,8 @@ export default function AdminSignalPricesPage() {
 
   const resetForm = () => {
     setFormData({
-      name: "",
-      price: 0,
-      strengthIncrease: 0,
+      amount: 0,
+      signalValue: 0,
     });
   };
 
@@ -104,9 +102,8 @@ export default function AdminSignalPricesPage() {
     setSelectedPrice(price);
     setIsCreateMode(false);
     setFormData({
-      name: price?.name || "",
-      price: price?.price || 0,
-      strengthIncrease: price?.strengthIncrease || 0,
+      amount: price?.amount || 0,
+      signalValue: price?.signalValue || 0,
     });
   };
 
@@ -158,38 +155,33 @@ export default function AdminSignalPricesPage() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="amount">Amount ($)</Label>
                 <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., Signal Boost, Premium Signal"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="price">Price ($)</Label>
-                <Input
-                  id="price"
+                  id="amount"
                   type="number"
                   min="0"
                   step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="strengthIncrease">Strength Increase (%)</Label>
+                <Label htmlFor="signalValue">Signal Value (%)</Label>
                 <Input
-                  id="strengthIncrease"
+                  id="signalValue"
                   type="number"
                   min="0"
-                  value={formData.strengthIncrease}
-                  onChange={(e) => setFormData({ ...formData, strengthIncrease: parseFloat(e.target.value) || 0 })}
+                  value={formData.signalValue}
+                  onChange={(e) => setFormData({ ...formData, signalValue: parseFloat(e.target.value) || 0 })}
                 />
               </div>
               <Button
                 onClick={isCreateMode ? handleCreate : handleUpdate}
-                disabled={isSubmitting || !formData.name || !formData.price || !formData.strengthIncrease}
+                disabled={
+                  isSubmitting ||
+                  formData.amount <= 0 ||
+                  formData.signalValue <= 0
+                }
                 className="w-full"
               >
                 {isSubmitting ? "Processing..." : isCreateMode ? "Create Price" : "Update Price"}
@@ -207,9 +199,8 @@ export default function AdminSignalPricesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Strength Increase</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Signal Value</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -223,9 +214,8 @@ export default function AdminSignalPricesPage() {
               ) : (
                 prices.map((price) => (
                   <TableRow key={price?._id || 'unknown'}>
-                    <TableCell className="font-medium">{price?.name || 'N/A'}</TableCell>
-                    <TableCell>${(price?.price ?? 0).toLocaleString()}</TableCell>
-                    <TableCell>+{(price?.strengthIncrease ?? 0)}%</TableCell>
+                    <TableCell className="font-medium">${(price?.amount ?? 0).toLocaleString()}</TableCell>
+                    <TableCell>+{(price?.signalValue ?? 0)}%</TableCell>
                     <TableCell>
                       <Button
                         variant="outline"

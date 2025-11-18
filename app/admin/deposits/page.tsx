@@ -35,8 +35,11 @@ export default function AdminDepositsPage() {
   };
 
   const handleStatusUpdate = async (id: string, status: "approved" | "rejected") => {
+    const adminNotes = typeof window !== "undefined"
+      ? window.prompt("Add admin notes (optional)") || undefined
+      : undefined;
     try {
-      await adminApi.updateDepositStatus(id, { status });
+      await adminApi.updateDepositStatus(id, { status, adminNotes });
       toast.success(`Deposit ${status}`);
       loadDeposits();
     } catch (error: any) {

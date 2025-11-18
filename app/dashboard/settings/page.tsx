@@ -18,14 +18,17 @@ import { useDropzone } from "react-dropzone";
 import { useRouter } from "next/navigation";
 import { Shield, Lock, FileText, Upload } from "lucide-react";
 
-const passwordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(6, "Password must be at least 6 characters"),
-  newPasswordRepeat: z.string().min(6, "Password must be at least 6 characters"),
-}).refine((data) => data.newPassword === data.newPasswordRepeat, {
-  message: "Passwords don't match",
-  path: ["newPasswordRepeat"],
-});
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z.string().min(6, "Password must be at least 6 characters"),
+    newPasswordRepeat: z.string().min(6, "Password must be at least 6 characters"),
+    twoFactorToken: z.string().optional(),
+  })
+  .refine((data) => data.newPassword === data.newPasswordRepeat, {
+    message: "Passwords don't match",
+    path: ["newPasswordRepeat"],
+  });
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
@@ -62,7 +65,7 @@ export default function SettingsPage() {
       await userApi.updateSecurity({
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
-        newPasswordRepeat: data.newPasswordRepeat,
+        twoFactorToken: data.twoFactorToken || undefined,
       });
       toast.success("Password updated successfully");
     } catch (error: any) {
@@ -170,6 +173,18 @@ export default function SettingsPage() {
                   />
                   {errors.newPasswordRepeat && (
                     <p className="text-sm text-error">{errors.newPasswordRepeat.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="twoFactorToken">2FA Token (if required)</Label>
+                  <Input
+                    id="twoFactorToken"
+                    type="text"
+                    placeholder="Enter 2FA code"
+                    {...register("twoFactorToken")}
+                  />
+                  {errors.twoFactorToken && (
+                    <p className="text-sm text-error">{errors.twoFactorToken.message}</p>
                   )}
                 </div>
                 <Button type="submit" disabled={isLoading}>

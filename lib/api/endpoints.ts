@@ -85,7 +85,7 @@ export const authApi = {
   setup2FA: (): Promise<TwoFASetupResponse> => api.post("/auth/2fa/setup"),
   verify2FA: (data: { token: string }): Promise<void> =>
     api.post("/auth/2fa/verify", data),
-  enable2FA: (data: { token: string }): Promise<void> =>
+  enable2FA: (data: { secret: string; token: string }): Promise<void> =>
     api.post("/auth/2fa/enable", data),
 };
 
@@ -101,7 +101,8 @@ export const userApi = {
     api.post("/user/kyc", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
-  getBalances: (): Promise<Balances> => api.get("/user/balances"),
+  getBalances: (currency?: string): Promise<Balances> =>
+    api.get("/user/balances", currency ? { params: { currency } } : undefined),
   updateCurrency: (data: { currency: string }): Promise<void> =>
     api.patch("/user/currency", data),
   subscribe: (data: SubscribeRequest): Promise<void> =>
@@ -232,7 +233,10 @@ export const adminApi = {
   getTrades: (): Promise<Trade[]> => api.get("/admin/trades"),
   updateTrade: (
     id: string,
-    data: { status?: string; result?: "win" | "loss" }
+    data: {
+      status?: "open" | "closed" | "canceled";
+      result?: "win" | "loss";
+    }
   ): Promise<Trade> => api.patch(`/admin/trades/${id}`, data),
 };
 

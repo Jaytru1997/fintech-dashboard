@@ -19,15 +19,14 @@ export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    balances: { 
-      main: { amount: "", currency: "USD" }, 
-      mining: { amount: "", currency: "USD" }, 
-      trade: { amount: "", currency: "USD" }, 
-      realEstate: { amount: "", currency: "USD" }, 
-      referral: { amount: "", currency: "USD" } 
-    },
+    mainBalance: "",
+    miningBalance: "",
+    tradeBalance: "",
+    realEstateBalance: "",
+    referralBalance: "",
     signalStrength: "",
     kycStatus: "pending" as "pending" | "approved" | "rejected",
+    isAdmin: false,
   });
 
   useEffect(() => {
@@ -55,24 +54,42 @@ export default function AdminUsersPage() {
     setIsSubmitting(true);
     try {
       const updateData: any = {};
+      const maybeNumber = (value: string) => {
+        const parsed = parseFloat(value);
+        return Number.isNaN(parsed) ? undefined : parsed;
+      };
+
+      const mainBalance = maybeNumber(formData.mainBalance);
+      if (mainBalance !== undefined) {
+        updateData.mainBalance = mainBalance;
+      }
+      const miningBalance = maybeNumber(formData.miningBalance);
+      if (miningBalance !== undefined) {
+        updateData.miningBalance = miningBalance;
+      }
+      const tradeBalance = maybeNumber(formData.tradeBalance);
+      if (tradeBalance !== undefined) {
+        updateData.tradeBalance = tradeBalance;
+      }
+      const realEstateBalance = maybeNumber(formData.realEstateBalance);
+      if (realEstateBalance !== undefined) {
+        updateData.realEstateBalance = realEstateBalance;
+      }
+      const referralBalance = maybeNumber(formData.referralBalance);
+      if (referralBalance !== undefined) {
+        updateData.referralBalance = referralBalance;
+      }
       if (formData.signalStrength) {
-        updateData.signalStrength = parseFloat(formData.signalStrength);
+        const signalStrength = maybeNumber(formData.signalStrength);
+        if (signalStrength !== undefined) {
+          updateData.signalStrength = signalStrength;
+        }
       }
       if (formData.kycStatus) {
         updateData.kycStatus = formData.kycStatus;
       }
-      const balances: any = {};
-      Object.entries(formData.balances).forEach(([key, value]) => {
-        if (value.amount) {
-          balances[key] = {
-            amount: parseFloat(value.amount),
-            currency: value.currency || "USD"
-          };
-        }
-      });
-      if (Object.keys(balances).length > 0) {
-        updateData.balances = balances;
-      }
+      updateData.isAdmin = formData.isAdmin;
+
       await adminApi.updateUser(selectedUser._id, updateData);
       toast.success("User updated successfully");
       setSelectedUser(null);
@@ -181,30 +198,14 @@ export default function AdminUsersPage() {
                                 if (!user?._id) return;
                                 setSelectedUser(user);
                                 setFormData({
-                                  balances: {
-                                    main: { 
-                                      amount: user?.balances?.main?.amount?.toString() || "", 
-                                      currency: user?.balances?.main?.currency || "USD" 
-                                    },
-                                    mining: { 
-                                      amount: user?.balances?.mining?.amount?.toString() || "", 
-                                      currency: user?.balances?.mining?.currency || "USD" 
-                                    },
-                                    trade: { 
-                                      amount: user?.balances?.trade?.amount?.toString() || "", 
-                                      currency: user?.balances?.trade?.currency || "USD" 
-                                    },
-                                    realEstate: { 
-                                      amount: user?.balances?.realEstate?.amount?.toString() || "", 
-                                      currency: user?.balances?.realEstate?.currency || "USD" 
-                                    },
-                                    referral: { 
-                                      amount: user?.balances?.referral?.amount?.toString() || "", 
-                                      currency: user?.balances?.referral?.currency || "USD" 
-                                    },
-                                  },
-                                  signalStrength: (user?.signalStrength ?? 0).toString(),
-                                  kycStatus: user?.kycStatus || "pending",
+                                mainBalance: user?.balances?.main?.amount?.toString() || "",
+                                miningBalance: user?.balances?.mining?.amount?.toString() || "",
+                                tradeBalance: user?.balances?.trade?.amount?.toString() || "",
+                                realEstateBalance: user?.balances?.realEstate?.amount?.toString() || "",
+                                referralBalance: user?.balances?.referral?.amount?.toString() || "",
+                                signalStrength: (user?.signalStrength ?? 0).toString(),
+                                kycStatus: user?.kycStatus || "pending",
+                                isAdmin: user?.isAdmin ?? false,
                                 });
                               }}
                             >
@@ -221,191 +222,66 @@ export default function AdminUsersPage() {
                             <div className="space-y-4">
                               <div className="space-y-2">
                                 <Label>Balances</Label>
-                                <div className="space-y-4">
-                                  <div className="grid grid-cols-3 gap-4">
-                                    <div>
-                                      <Label htmlFor="main-amount">Main Amount</Label>
-                                      <Input
-                                        id="main-amount"
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.balances.main.amount}
-                                        onChange={(e) =>
-                                          setFormData({
-                                            ...formData,
-                                            balances: { 
-                                              ...formData.balances, 
-                                              main: { ...formData.balances.main, amount: e.target.value }
-                                            },
-                                          })
-                                        }
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label htmlFor="main-currency">Main Currency</Label>
-                                      <Input
-                                        id="main-currency"
-                                        type="text"
-                                        value={formData.balances.main.currency}
-                                        onChange={(e) =>
-                                          setFormData({
-                                            ...formData,
-                                            balances: { 
-                                              ...formData.balances, 
-                                              main: { ...formData.balances.main, currency: e.target.value }
-                                            },
-                                          })
-                                        }
-                                      />
-                                    </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="mainBalance">Main Balance</Label>
+                                    <Input
+                                      id="mainBalance"
+                                      type="number"
+                                      step="0.01"
+                                      value={formData.mainBalance}
+                                      onChange={(e) =>
+                                        setFormData({ ...formData, mainBalance: e.target.value })
+                                      }
+                                    />
                                   </div>
-                                  <div className="grid grid-cols-3 gap-4">
-                                    <div>
-                                      <Label htmlFor="mining-amount">Mining Amount</Label>
-                                      <Input
-                                        id="mining-amount"
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.balances.mining.amount}
-                                        onChange={(e) =>
-                                          setFormData({
-                                            ...formData,
-                                            balances: { 
-                                              ...formData.balances, 
-                                              mining: { ...formData.balances.mining, amount: e.target.value }
-                                            },
-                                          })
-                                        }
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label htmlFor="mining-currency">Mining Currency</Label>
-                                      <Input
-                                        id="mining-currency"
-                                        type="text"
-                                        value={formData.balances.mining.currency}
-                                        onChange={(e) =>
-                                          setFormData({
-                                            ...formData,
-                                            balances: { 
-                                              ...formData.balances, 
-                                              mining: { ...formData.balances.mining, currency: e.target.value }
-                                            },
-                                          })
-                                        }
-                                      />
-                                    </div>
+                                  <div>
+                                    <Label htmlFor="miningBalance">Mining Balance</Label>
+                                    <Input
+                                      id="miningBalance"
+                                      type="number"
+                                      step="0.01"
+                                      value={formData.miningBalance}
+                                      onChange={(e) =>
+                                        setFormData({ ...formData, miningBalance: e.target.value })
+                                      }
+                                    />
                                   </div>
-                                  <div className="grid grid-cols-3 gap-4">
-                                    <div>
-                                      <Label htmlFor="trade-amount">Trade Amount</Label>
-                                      <Input
-                                        id="trade-amount"
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.balances.trade.amount}
-                                        onChange={(e) =>
-                                          setFormData({
-                                            ...formData,
-                                            balances: { 
-                                              ...formData.balances, 
-                                              trade: { ...formData.balances.trade, amount: e.target.value }
-                                            },
-                                          })
-                                        }
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label htmlFor="trade-currency">Trade Currency</Label>
-                                      <Input
-                                        id="trade-currency"
-                                        type="text"
-                                        value={formData.balances.trade.currency}
-                                        onChange={(e) =>
-                                          setFormData({
-                                            ...formData,
-                                            balances: { 
-                                              ...formData.balances, 
-                                              trade: { ...formData.balances.trade, currency: e.target.value }
-                                            },
-                                          })
-                                        }
-                                      />
-                                    </div>
+                                  <div>
+                                    <Label htmlFor="tradeBalance">Trade Balance</Label>
+                                    <Input
+                                      id="tradeBalance"
+                                      type="number"
+                                      step="0.01"
+                                      value={formData.tradeBalance}
+                                      onChange={(e) =>
+                                        setFormData({ ...formData, tradeBalance: e.target.value })
+                                      }
+                                    />
                                   </div>
-                                  <div className="grid grid-cols-3 gap-4">
-                                    <div>
-                                      <Label htmlFor="realEstate-amount">Real Estate Amount</Label>
-                                      <Input
-                                        id="realEstate-amount"
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.balances.realEstate.amount}
-                                        onChange={(e) =>
-                                          setFormData({
-                                            ...formData,
-                                            balances: { 
-                                              ...formData.balances, 
-                                              realEstate: { ...formData.balances.realEstate, amount: e.target.value }
-                                            },
-                                          })
-                                        }
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label htmlFor="realEstate-currency">Real Estate Currency</Label>
-                                      <Input
-                                        id="realEstate-currency"
-                                        type="text"
-                                        value={formData.balances.realEstate.currency}
-                                        onChange={(e) =>
-                                          setFormData({
-                                            ...formData,
-                                            balances: { 
-                                              ...formData.balances, 
-                                              realEstate: { ...formData.balances.realEstate, currency: e.target.value }
-                                            },
-                                          })
-                                        }
-                                      />
-                                    </div>
+                                  <div>
+                                    <Label htmlFor="realEstateBalance">Real Estate Balance</Label>
+                                    <Input
+                                      id="realEstateBalance"
+                                      type="number"
+                                      step="0.01"
+                                      value={formData.realEstateBalance}
+                                      onChange={(e) =>
+                                        setFormData({ ...formData, realEstateBalance: e.target.value })
+                                      }
+                                    />
                                   </div>
-                                  <div className="grid grid-cols-3 gap-4">
-                                    <div>
-                                      <Label htmlFor="referral-amount">Referral Amount</Label>
-                                      <Input
-                                        id="referral-amount"
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.balances.referral.amount}
-                                        onChange={(e) =>
-                                          setFormData({
-                                            ...formData,
-                                            balances: { 
-                                              ...formData.balances, 
-                                              referral: { ...formData.balances.referral, amount: e.target.value }
-                                            },
-                                          })
-                                        }
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label htmlFor="referral-currency">Referral Currency</Label>
-                                      <Input
-                                        id="referral-currency"
-                                        type="text"
-                                        value={formData.balances.referral.currency}
-                                        onChange={(e) =>
-                                          setFormData({
-                                            ...formData,
-                                            balances: { 
-                                              ...formData.balances, 
-                                              referral: { ...formData.balances.referral, currency: e.target.value }
-                                            },
-                                          })
-                                        }
-                                      />
-                                    </div>
+                                  <div>
+                                    <Label htmlFor="referralBalance">Referral Balance</Label>
+                                    <Input
+                                      id="referralBalance"
+                                      type="number"
+                                      step="0.01"
+                                      value={formData.referralBalance}
+                                      onChange={(e) =>
+                                        setFormData({ ...formData, referralBalance: e.target.value })
+                                      }
+                                    />
                                   </div>
                                 </div>
                               </div>
@@ -439,6 +315,18 @@ export default function AdminUsersPage() {
                                   <option value="approved">Approved</option>
                                   <option value="rejected">Rejected</option>
                                 </select>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  id="isAdmin"
+                                  checked={formData.isAdmin}
+                                  onChange={(e) =>
+                                    setFormData({ ...formData, isAdmin: e.target.checked })
+                                  }
+                                  className="rounded border-gray-800"
+                                />
+                                <Label htmlFor="isAdmin">Is Admin</Label>
                               </div>
                               <Button onClick={handleUpdateUser} disabled={isSubmitting} className="w-full">
                                 {isSubmitting ? "Updating..." : "Update User"}

@@ -23,7 +23,6 @@ export default function AdminDepositMethodsPage() {
   const [formData, setFormData] = useState<CreateDepositMethodRequest>({
     name: "",
     type: "crypto",
-    description: "",
     details: {},
     isActive: true,
   });
@@ -201,7 +200,6 @@ export default function AdminDepositMethodsPage() {
     setFormData({
       name: "",
       type: "crypto",
-      description: "",
       details: {},
       isActive: true,
     });
@@ -213,7 +211,6 @@ export default function AdminDepositMethodsPage() {
     setFormData({
       name: method?.name || "",
       type: method?.type || "custom",
-      description: method?.description || "",
       details: method?.details || {},
       isActive: method?.isActive ?? true,
     });
@@ -273,15 +270,6 @@ export default function AdminDepositMethodsPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., Bank Transfer, Crypto, PayPal"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Method description"
                 />
               </div>
               <div className="space-y-2">
@@ -402,7 +390,6 @@ export default function AdminDepositMethodsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Details</TableHead>
                 <TableHead>Status</TableHead>
@@ -420,7 +407,6 @@ export default function AdminDepositMethodsPage() {
                 methods.map((method) => (
                   <TableRow key={method?._id || 'unknown'}>
                     <TableCell className="font-medium">{method?.name || 'N/A'}</TableCell>
-                    <TableCell>{method?.description || 'N/A'}</TableCell>
                     <TableCell className="capitalize">{method?.type?.replace(/_/g, " ") || "N/A"}</TableCell>
                     <TableCell>
                       {method?.details && Object.keys(method.details).length > 0 ? (

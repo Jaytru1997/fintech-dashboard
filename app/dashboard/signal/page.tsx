@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuthStore } from "@/stores/auth";
 import { userApi } from "@/lib/api/endpoints";
@@ -19,7 +17,6 @@ export default function SignalPage() {
   const [signalPrices, setSignalPrices] = useState<SignalPrice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPrice, setSelectedPrice] = useState<SignalPrice | null>(null);
-  const [amount, setAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -41,19 +38,22 @@ export default function SignalPage() {
   };
 
   const handlePurchase = async () => {
-    if (!selectedPrice || !amount) return;
+    if (!selectedPrice) return;
     setIsSubmitting(true);
     try {
       await userApi.purchaseSignal({
         signalPriceId: selectedPrice._id,
-        amount: parseFloat(amount),
+        amount: selectedPrice.amount,
       });
       toast.success("Signal strength purchased successfully!");
       if (user) {
-        updateUser({ signalStrength: (user.signalStrength || 0) + selectedPrice.strengthIncrease });
+        const nextStrength = Math.min(
+          100,
+          (user.signalStrength || 0) + selectedPrice.signalValue
+        );
+        updateUser({ signalStrength: nextStrength });
       }
       setSelectedPrice(null);
-      setAmount("");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Purchase failed");
     } finally {
@@ -106,9 +106,9 @@ export default function SignalPage() {
           {signalPrices.map((price) => (
             <Card key={price._id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle>{price.name}</CardTitle>
+                <CardTitle>${price.amount.toLocaleString()}</CardTitle>
                 <CardDescription>
-                  Price: ${price.price} | +{price.strengthIncrease}% Signal Strength
+                  Signal Boost: +{price.signalValue}%
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -124,34 +124,14 @@ export default function SignalPage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Purchase Signal Strength</DialogTitle>
-                      <DialogDescription>
-                        {price.name} | Price: ${price.price} | Signal Value: +{price.strengthIncrease}%
-                      </DialogDescription>
+                    <DialogDescription>
+                      Pay ${price.amount.toLocaleString()} to gain +{price.signalValue}% signal strength.
+                    </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="amount">Amount</Label>
-                        <Input
-                          id="amount"
-                          type="number"
-                          min="1"
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
-                          placeholder="Enter amount to purchase"
-                        />
-                      </div>
-                      <div className="p-4 bg-background-dark rounded-lg">
-                        <p className="text-sm text-gray-400">Total Cost:</p>
-                        <p className="text-xl font-bold text-white">
-                          ${amount ? (parseFloat(amount) * price.price).toFixed(2) : "0.00"}
-                        </p>
-                        <p className="text-sm text-gray-400 mt-2">
-                          Signal Strength Gain: +{amount ? (parseFloat(amount) * price.strengthIncrease).toFixed(0) : "0"}%
-                        </p>
-                      </div>
                       <Button
                         onClick={handlePurchase}
-                        disabled={isSubmitting || !amount || parseFloat(amount) <= 0}
+                      disabled={isSubmitting}
                         className="w-full"
                       >
                         {isSubmitting ? "Processing..." : "Confirm Purchase"}

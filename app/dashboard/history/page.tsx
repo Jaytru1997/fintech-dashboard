@@ -121,7 +121,7 @@ export default function HistoryPage() {
                         <TableCell>
                           <span
                             className={`px-2 py-1 rounded text-xs ${
-                              trade.status === "active"
+                              trade.status === "open"
                                 ? "bg-primary/20 text-primary"
                                 : "bg-background-dark text-gray-400"
                             }`}
@@ -180,7 +180,7 @@ export default function HistoryPage() {
                   ) : (
                     deposits.map((deposit) => (
                       <TableRow key={deposit._id}>
-                        <TableCell>{deposit.method}</TableCell>
+                        <TableCell>{deposit.methodId}</TableCell>
                         <TableCell>{deposit.amount.toLocaleString()}</TableCell>
                         <TableCell>{deposit.currency}</TableCell>
                         <TableCell>
@@ -234,7 +234,7 @@ export default function HistoryPage() {
                   ) : (
                     withdrawals.map((withdrawal) => (
                       <TableRow key={withdrawal._id}>
-                        <TableCell>{withdrawal.method}</TableCell>
+                        <TableCell>{withdrawal.methodId}</TableCell>
                         <TableCell>{withdrawal.amount.toLocaleString()}</TableCell>
                         <TableCell>{withdrawal.currency}</TableCell>
                         <TableCell>
@@ -303,7 +303,9 @@ export default function HistoryPage() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {new Date(staking.createdAt).toLocaleDateString()}
+                          {staking.createdAt
+                            ? new Date(staking.createdAt).toLocaleDateString()
+                            : "N/A"}
                         </TableCell>
                       </TableRow>
                     ))
@@ -355,7 +357,9 @@ export default function HistoryPage() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {new Date(investment.createdAt).toLocaleDateString()}
+                          {investment.createdAt
+                            ? new Date(investment.createdAt).toLocaleDateString()
+                            : "N/A"}
                         </TableCell>
                       </TableRow>
                     ))

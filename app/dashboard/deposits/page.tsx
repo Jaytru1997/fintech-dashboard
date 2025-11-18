@@ -210,9 +210,6 @@ export default function DepositsPage() {
                       <p className="text-sm font-medium text-white">
                         {selectedMethod.name} instructions
                       </p>
-                      {selectedMethod.description && (
-                        <p className="text-xs text-gray-400 mt-1">{selectedMethod.description}</p>
-                      )}
                     </div>
                     <div className="text-xs text-gray-400">
                       <span className="font-semibold text-white">Type:</span>{" "}

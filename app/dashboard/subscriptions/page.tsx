@@ -84,7 +84,7 @@ export default function SubscriptionsPage() {
                 {plan.name}
               </CardTitle>
               <CardDescription>
-                Price: ${plan.price} | Duration: {plan.duration} days
+                Min: ${plan.minAmount} | Max: ${plan.maxAmount}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -101,17 +101,7 @@ export default function SubscriptionsPage() {
                   <DialogHeader>
                     <DialogTitle>Subscribe to {plan.name}</DialogTitle>
                     <DialogDescription>
-                      Price: ${plan.price} | Duration: {plan.duration} days
-                      {plan.features && plan.features.length > 0 && (
-                        <div className="mt-2">
-                          <p className="text-sm font-medium">Features:</p>
-                          <ul className="text-sm list-disc list-inside">
-                            {plan.features.map((feature, idx) => (
-                              <li key={idx}>{feature}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                      Invest between ${plan.minAmount} and ${plan.maxAmount}.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">

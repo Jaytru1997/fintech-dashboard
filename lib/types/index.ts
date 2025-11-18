@@ -71,8 +71,8 @@ export interface Trade {
   direction: "BUY" | "SELL";
   isSwap?: boolean;
   swapPair?: string;
-  status: "open" | "closed";
-  result?: "win" | "loss" | "draw";
+  status: "open" | "closed" | "canceled";
+  result?: "win" | "loss";
   createdAt: string;
 }
 
@@ -109,6 +109,10 @@ export interface Staking {
   cycle: "daily" | "weekly" | "monthly";
   startDate: string;
   endDate: string;
+  poolName?: string;
+  durationDays?: number;
+  status?: string;
+  createdAt?: string;
 }
 
 export interface RealEstateInvestment {
@@ -117,7 +121,12 @@ export interface RealEstateInvestment {
   userId?: string;
   amount: number;
   roi: number;
+  duration: number;
   startDate: string;
+  realEstateTitle?: string;
+  durationMonths?: number;
+  status?: string;
+  createdAt?: string;
 }
 
 // Resource Types
@@ -141,7 +150,7 @@ export interface RealEstate {
   documents?: string[];
   type: string;
   kind: string;
-  objective?: string;
+  objective: string;
   whyThisProject: string;
   whyThisSponsor: string;
 }
@@ -149,16 +158,14 @@ export interface RealEstate {
 export interface SubscriptionPlan {
   _id: string;
   name: string;
-  price: number;
-  duration: number;
-  features: string[];
+  minAmount: number;
+  maxAmount: number;
 }
 
 export interface SignalPrice {
   _id: string;
-  name: string;
-  price: number;
-  strengthIncrease: number;
+  amount: number;
+  signalValue: number;
 }
 
 export interface CopyTrader {
@@ -174,17 +181,16 @@ export interface DepositMethod {
   _id: string;
   name: string;
   type: string;
-  description?: string;
-  isActive: boolean;
   details?: Record<string, string>;
+  isActive: boolean;
 }
 
 export interface WithdrawalMethod {
   _id: string;
   name: string;
-  description: string;
+  type: string;
+  details?: Record<string, string>;
   isActive: boolean;
-  requiresCode: boolean;
 }
 
 // Request Types
@@ -200,7 +206,7 @@ export interface UpdateProfileRequest {
 export interface UpdateSecurityRequest {
   currentPassword?: string;
   newPassword?: string;
-  newPasswordRepeat?: string;
+  twoFactorToken?: string;
 }
 
 export interface SubscribeRequest {
@@ -233,6 +239,7 @@ export interface TradeRequest {
 export interface RealEstateInvestRequest {
   realEstateId: string;
   amount: number;
+  duration: number;
 }
 
 export interface DepositRequest {
@@ -266,7 +273,7 @@ export interface CreateRealEstateRequest {
   documents?: string[];
   type: string;
   kind: string;
-  objective?: string;
+  objective: string;
   whyThisProject: string;
   whyThisSponsor: string;
 }
@@ -288,50 +295,47 @@ export interface CreateCopyTraderRequest {
 
 export interface CreateSubscriptionPlanRequest {
   name: string;
-  price: number;
-  duration: number;
-  features: string[];
+  minAmount: number;
+  maxAmount: number;
 }
 
 export interface CreateSignalPriceRequest {
-  name: string;
-  price: number;
-  strengthIncrease: number;
+  amount: number;
+  signalValue: number;
 }
 
 export interface CreateDepositMethodRequest {
   name: string;
   type: string;
-  description?: string;
   details?: Record<string, string>;
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 export interface CreateWithdrawalMethodRequest {
   name: string;
-  description: string;
-  isActive: boolean;
-  requiresCode: boolean;
+  type: string;
+  details?: Record<string, string>;
+  isActive?: boolean;
 }
 
 export interface UpdateDepositStatusRequest {
-  status: "approved" | "rejected";
-  notes?: string;
+  status: "pending" | "approved" | "rejected";
+  adminNotes?: string;
 }
 
 export interface UpdateWithdrawalStatusRequest {
-  status: "approved" | "rejected";
-  notes?: string;
+  status: "pending" | "approved" | "rejected";
+  adminNotes?: string;
 }
 
 export interface UpdateUserRequest {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  country?: string;
-  phoneNumber?: string;
-  currency?: string;
-  balances?: Partial<Balances>;
+  mainBalance?: number;
+  miningBalance?: number;
+  tradeBalance?: number;
+  realEstateBalance?: number;
+  referralBalance?: number;
+  signalStrength?: number;
+  kycStatus?: "pending" | "approved" | "rejected";
   isAdmin?: boolean;
 }
 

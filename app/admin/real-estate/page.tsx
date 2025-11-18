@@ -263,7 +263,7 @@ export default function AdminRealEstatePage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="objective">Objective (Optional)</Label>
+                <Label htmlFor="objective">Objective</Label>
                 <Input
                   id="objective"
                   value={formData.objective}

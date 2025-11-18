@@ -21,6 +21,7 @@ export default function RealEstatePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<RealEstate | null>(null);
   const [amount, setAmount] = useState("");
+  const [duration, setDuration] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -47,16 +48,18 @@ export default function RealEstatePage() {
   };
 
   const handleInvest = async () => {
-    if (!selectedProperty || !amount) return;
+    if (!selectedProperty || !amount || !duration) return;
     setIsSubmitting(true);
     try {
       await userApi.investRealEstate({
         realEstateId: selectedProperty._id,
         amount: parseFloat(amount),
+        duration: parseInt(duration, 10),
       });
       toast.success("Investment successful!");
       setSelectedProperty(null);
       setAmount("");
+      setDuration("");
       loadData();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Investment failed");
@@ -153,16 +156,29 @@ export default function RealEstatePage() {
                           <p className="text-sm text-muted-foreground">{property.overview}</p>
                         </div>
                         <div className="space-y-4 pt-4 border-t">
-                          <div className="space-y-2">
-                            <Label htmlFor="amount">Investment Amount</Label>
-                            <Input
-                              id="amount"
-                              type="number"
-                              min={property.minimumInvestment}
-                              value={amount}
-                              onChange={(e) => setAmount(e.target.value)}
-                              placeholder="Enter amount"
-                            />
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="amount">Investment Amount</Label>
+                              <Input
+                                id="amount"
+                                type="number"
+                                min={property.minimumInvestment}
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                placeholder="Enter amount"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="duration">Duration (months)</Label>
+                              <Input
+                                id="duration"
+                                type="number"
+                                min={1}
+                                value={duration}
+                                onChange={(e) => setDuration(e.target.value)}
+                                placeholder="Enter duration"
+                              />
+                            </div>
                           </div>
                           <div className="p-4 bg-background-dark rounded-lg">
                             <p className="text-sm text-gray-400">Expected Annual Return:</p>
@@ -175,7 +191,13 @@ export default function RealEstatePage() {
                           </div>
                           <Button
                             onClick={handleInvest}
-                            disabled={isSubmitting || !amount || parseFloat(amount) < property.minimumInvestment}
+                            disabled={
+                              isSubmitting ||
+                              !amount ||
+                              parseFloat(amount) < property.minimumInvestment ||
+                              !duration ||
+                              parseInt(duration, 10) < 1
+                            }
                             className="w-full"
                           >
                             {isSubmitting ? "Processing..." : "Invest Now"}

@@ -71,7 +71,7 @@ export default function TwoFAPage() {
   const onEnable = async (data: VerifyFormData) => {
     setIsLoading(true);
     try {
-      await authApi.enable2FA(data);
+      await authApi.enable2FA({ secret, token: data.token });
       toast.success("2FA enabled successfully!");
       router.push("/dashboard/profile");
     } catch (error: any) {

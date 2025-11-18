@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { adminApi } from "@/lib/api/endpoints";
 import { WithdrawalMethod, CreateWithdrawalMethodRequest } from "@/lib/types";
 import { toast } from "react-toastify";
-import { ArrowUpCircle, Plus, Edit } from "lucide-react";
+import { ArrowUpCircle, Plus, Edit, X } from "lucide-react";
 
 export default function AdminWithdrawalMethodsPage() {
   const [methods, setMethods] = useState<WithdrawalMethod[]>([]);
@@ -21,10 +22,104 @@ export default function AdminWithdrawalMethodsPage() {
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [formData, setFormData] = useState<CreateWithdrawalMethodRequest>({
     name: "",
-    description: "",
+    type: "bank",
+    details: {},
     isActive: true,
-    requiresCode: false,
   });
+
+  const typeOptions = [
+    { value: "bank", label: "Bank Transfer" },
+    { value: "crypto", label: "Crypto Wallet" },
+    { value: "mobile_money", label: "Mobile Money" },
+    { value: "custom", label: "Custom" },
+  ];
+
+  const detailTemplates: Record<
+    "bank" | "crypto" | "mobile_money",
+    { key: string; label: string; placeholder?: string }[]
+  > = {
+    bank: [
+      { key: "bankName", label: "Bank Name", placeholder: "Example Bank" },
+      { key: "accountName", label: "Account Name", placeholder: "John Doe" },
+      { key: "accountNumber", label: "Account Number", placeholder: "0123456789" },
+      { key: "routingNumber", label: "Routing / Swift", placeholder: "ABCDEF12" },
+    ],
+    crypto: [
+      { key: "network", label: "Network", placeholder: "USDT-TRC20" },
+      { key: "asset", label: "Asset", placeholder: "USDT" },
+      { key: "address", label: "Wallet Address", placeholder: "0x..." },
+    ],
+    mobile_money: [
+      { key: "provider", label: "Provider", placeholder: "M-Pesa" },
+      { key: "phoneNumber", label: "Phone Number", placeholder: "+254700000000" },
+      { key: "accountName", label: "Account Name", placeholder: "John Doe" },
+    ],
+  };
+
+  const templateKeys = Object.keys(detailTemplates) as Array<
+    keyof typeof detailTemplates
+  >;
+
+  const detailFields = useMemo(() => {
+    if (templateKeys.includes(formData.type as any)) {
+      return detailTemplates[formData.type as keyof typeof detailTemplates];
+    }
+    return null;
+  }, [formData.type]);
+
+  const isCustomType = detailFields === null;
+
+  const sanitizeDetails = (details?: Record<string, string>) => {
+    if (!details) return undefined;
+    const entries = Object.entries(details).filter(
+      ([key, value]) => key.trim().length && value.trim().length
+    );
+    return entries.length ? Object.fromEntries(entries) : undefined;
+  };
+
+  const handleDetailChange = (key: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      details: { ...(prev.details || {}), [key]: value },
+    }));
+  };
+
+  const handleCustomKeyChange = (oldKey: string, newKey: string) => {
+    setFormData((prev) => {
+      const details = { ...(prev.details || {}) };
+      const detailValue = details[oldKey];
+      delete details[oldKey];
+      const nextKey = newKey.trim() || oldKey;
+      details[nextKey] = detailValue;
+      return { ...prev, details };
+    });
+  };
+
+  const handleCustomValueChange = (key: string, value: string) => {
+    handleDetailChange(key, value);
+  };
+
+  const handleAddCustomDetail = () => {
+    setFormData((prev) => {
+      const details = { ...(prev.details || {}) };
+      let index = Object.keys(details).length + 1;
+      let newKey = `field_${index}`;
+      while (details[newKey]) {
+        index += 1;
+        newKey = `field_${index}`;
+      }
+      details[newKey] = "";
+      return { ...prev, details };
+    });
+  };
+
+  const handleRemoveCustomDetail = (key: string) => {
+    setFormData((prev) => {
+      const details = { ...(prev.details || {}) };
+      delete details[key];
+      return { ...prev, details };
+    });
+  };
 
   useEffect(() => {
     loadMethods();
@@ -65,7 +160,10 @@ export default function AdminWithdrawalMethodsPage() {
   const handleCreate = async () => {
     setIsSubmitting(true);
     try {
-      await adminApi.createWithdrawalMethod(formData);
+      await adminApi.createWithdrawalMethod({
+        ...formData,
+        details: sanitizeDetails(formData.details),
+      });
       toast.success("Withdrawal method created successfully");
       setIsCreateMode(false);
       resetForm();
@@ -81,7 +179,10 @@ export default function AdminWithdrawalMethodsPage() {
     if (!selectedMethod?._id) return;
     setIsSubmitting(true);
     try {
-      await adminApi.updateWithdrawalMethod(selectedMethod._id, formData);
+      await adminApi.updateWithdrawalMethod(selectedMethod._id, {
+        ...formData,
+        details: sanitizeDetails(formData.details),
+      });
       toast.success("Withdrawal method updated successfully");
       setSelectedMethod(null);
       resetForm();
@@ -96,9 +197,9 @@ export default function AdminWithdrawalMethodsPage() {
   const resetForm = () => {
     setFormData({
       name: "",
-      description: "",
+      type: "bank",
+      details: {},
       isActive: true,
-      requiresCode: false,
     });
   };
 
@@ -107,9 +208,9 @@ export default function AdminWithdrawalMethodsPage() {
     setIsCreateMode(false);
     setFormData({
       name: method?.name || "",
-      description: method?.description || "",
+      type: method?.type || "custom",
+      details: method?.details || {},
       isActive: method?.isActive ?? true,
-      requiresCode: method?.requiresCode ?? false,
     });
   };
 
@@ -170,33 +271,101 @@ export default function AdminWithdrawalMethodsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Method description"
-                />
+                <Label htmlFor="type">Method Type</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value) =>
+                    setFormData((prev) => {
+                      const template = detailTemplates[value as keyof typeof detailTemplates];
+                      let nextDetails: Record<string, string> = {};
+                      if (template) {
+                        nextDetails = template.reduce((acc, field) => {
+                          acc[field.key] = prev.details?.[field.key] || "";
+                          return acc;
+                        }, {} as Record<string, string>);
+                      } else {
+                        nextDetails = prev.details || {};
+                      }
+                      return { ...prev, type: value, details: nextDetails };
+                    })
+                  }
+                >
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Select method type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {typeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Details</Label>
+                  {isCustomType && (
+                    <Button type="button" variant="outline" size="sm" onClick={handleAddCustomDetail}>
+                      Add Field
+                    </Button>
+                  )}
+                </div>
+                {detailFields ? (
+                  <div className="grid grid-cols-1 gap-3">
+                    {detailFields.map((field) => (
+                      <div key={field.key} className="space-y-1">
+                        <Label htmlFor={`detail-${field.key}`}>{field.label}</Label>
+                        <Input
+                          id={`detail-${field.key}`}
+                          placeholder={field.placeholder}
+                          value={formData.details?.[field.key] || ""}
+                          onChange={(e) => handleDetailChange(field.key, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {Object.entries(formData.details || {}).length === 0 && (
+                      <p className="text-sm text-gray-500">Add custom fields for this method type.</p>
+                    )}
+                    {Object.entries(formData.details || {}).map(([key, value], index) => (
+                      <div key={`${key}-${index}`} className="grid grid-cols-5 gap-2 items-center">
+                        <Input
+                          placeholder="Field name"
+                          value={key}
+                          onChange={(e) => handleCustomKeyChange(key, e.target.value)}
+                          className="col-span-2"
+                        />
+                        <Input
+                          placeholder="Field value"
+                          value={value}
+                          onChange={(e) => handleCustomValueChange(key, e.target.value)}
+                          className="col-span-2"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => handleRemoveCustomDetail(key)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
                   id="isActive"
-                  checked={formData.isActive}
+                  checked={formData.isActive ?? true}
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                   className="rounded border-gray-800"
                 />
                 <Label htmlFor="isActive">Active</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="requiresCode"
-                  checked={formData.requiresCode}
-                  onChange={(e) => setFormData({ ...formData, requiresCode: e.target.checked })}
-                  className="rounded border-gray-800"
-                />
-                <Label htmlFor="requiresCode">Requires Withdrawal Code</Label>
               </div>
               <Button
                 onClick={isCreateMode ? handleCreate : handleUpdate}
@@ -219,9 +388,9 @@ export default function AdminWithdrawalMethodsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Details</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Requires Code</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -236,15 +405,26 @@ export default function AdminWithdrawalMethodsPage() {
                 methods.map((method) => (
                   <TableRow key={method?._id || 'unknown'}>
                     <TableCell className="font-medium">{method?.name || 'N/A'}</TableCell>
-                    <TableCell>{method?.description || 'N/A'}</TableCell>
+                    <TableCell className="capitalize">{method?.type?.replace(/_/g, " ") || "N/A"}</TableCell>
+                    <TableCell>
+                      {method?.details && Object.keys(method.details).length > 0 ? (
+                        <div className="text-xs text-gray-300 space-y-1">
+                          {Object.entries(method.details).map(([key, value]) => (
+                            <div key={key} className="flex gap-1">
+                              <span className="text-white font-medium">
+                                {key.replace(/([A-Z])/g, " $1").replace(/_/g, " ")}:
+                              </span>
+                              <span>{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-500">No details</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded text-xs ${method?.isActive ? 'bg-green-500/20 text-green-500' : 'bg-gray-500/20 text-gray-500'}`}>
                         {method?.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded text-xs ${method?.requiresCode ? 'bg-yellow-500/20 text-yellow-500' : 'bg-gray-500/20 text-gray-500'}`}>
-                        {method?.requiresCode ? 'Yes' : 'No'}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -266,4 +446,3 @@ export default function AdminWithdrawalMethodsPage() {
     </motion.div>
   );
 }
-
