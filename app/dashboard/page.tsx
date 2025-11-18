@@ -118,7 +118,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-wide text-gray-500 flex items-center gap-2">
-                  Total Balance
+                  Main Balance
                 </p>
                 <p className="mt-1 text-3xl font-semibold text-white">
                   ${balances?.main?.amount?.toLocaleString() || "0"}
