@@ -98,7 +98,7 @@ export default function CopyTradingPage() {
                   }`}
                 />
                 <span className="text-sm text-gray-400">
-                  {trader.performance > 0 ? "Profitable" : "Loss"}
+                  {trader.performance > 0 ? "Profitable" : "Needs Improvement"}
                 </span>
               </div>
               {trader.isFollowing ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,14 +22,22 @@ export default function AdminCopyTradersPage() {
   const [formData, setFormData] = useState<CreateCopyTraderRequest>({
     name: "",
     description: "",
-    winRate: 0,
-    totalTrades: 0,
-    image: "",
+    performance: 0,
+    image: null,
   });
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   useEffect(() => {
     loadTraders();
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const loadTraders = async () => {
     setIsLoading(true);
@@ -98,10 +106,10 @@ export default function AdminCopyTradersPage() {
     setFormData({
       name: "",
       description: "",
-      winRate: 0,
-      totalTrades: 0,
-      image: "",
+      performance: 0,
+      image: null,
     });
+    setImagePreview("");
   };
 
   const handleEdit = (trader: CopyTrader) => {
@@ -110,10 +118,21 @@ export default function AdminCopyTradersPage() {
     setFormData({
       name: trader?.name || "",
       description: trader?.description || "",
-      winRate: trader?.winRate || 0,
-      totalTrades: trader?.totalTrades || 0,
-      image: trader?.image || "",
+      performance: trader?.performance || 0,
+      image: null,
     });
+    setImagePreview(trader?.image || "");
+  };
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setFormData((prev) => ({ ...prev, image: file }));
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setFormData((prev) => ({ ...prev, image: null }));
+      setImagePreview(selectedTrader?.image || "");
+    }
   };
 
   if (isLoading) {
@@ -184,40 +203,49 @@ export default function AdminCopyTradersPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="winRate">Win Rate (%)</Label>
+                  <Label htmlFor="performance">Performance (%)</Label>
                   <Input
-                    id="winRate"
+                    id="performance"
                     type="number"
                     min="0"
                     max="100"
                     step="0.1"
-                    value={formData.winRate}
-                    onChange={(e) => setFormData({ ...formData, winRate: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="totalTrades">Total Trades</Label>
-                  <Input
-                    id="totalTrades"
-                    type="number"
-                    min="0"
-                    value={formData.totalTrades}
-                    onChange={(e) => setFormData({ ...formData, totalTrades: parseInt(e.target.value) || 0 })}
+                    value={formData.performance}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        performance: parseFloat(e.target.value) || 0,
+                      })
+                    }
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="image">Image URL (Optional)</Label>
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
-                />
+                <Label htmlFor="image">Trader Image (Optional)</Label>
+                <Input id="image" type="file" accept="image/*" onChange={handleImageChange} />
+                {imagePreview && (
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={imagePreview}
+                      alt="Trader preview"
+                      className="h-16 w-16 rounded-md object-cover border border-gray-800"
+                    />
+                    <p className="text-sm text-gray-400">
+                      {imagePreview.startsWith("blob:")
+                        ? "Selected image preview"
+                        : "Current image"}
+                    </p>
+                  </div>
+                )}
               </div>
               <Button
                 onClick={isCreateMode ? handleCreate : handleUpdate}
-                disabled={isSubmitting || !formData.name || !formData.description}
+                disabled={
+                  isSubmitting ||
+                  !formData.name ||
+                  !formData.description ||
+                  formData.performance < 0
+                }
                 className="w-full"
               >
                 {isSubmitting ? "Processing..." : isCreateMode ? "Create Trader" : "Update Trader"}
@@ -237,8 +265,7 @@ export default function AdminCopyTradersPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Win Rate</TableHead>
-                <TableHead>Total Trades</TableHead>
+                <TableHead>Performance</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -254,10 +281,9 @@ export default function AdminCopyTradersPage() {
                   <TableRow key={trader?._id || 'unknown'}>
                     <TableCell className="font-medium">{trader?.name || 'N/A'}</TableCell>
                     <TableCell className="max-w-xs truncate">{trader?.description || 'N/A'}</TableCell>
-                    <TableCell className={trader?.winRate && trader.winRate > 0 ? "text-green-500" : "text-gray-400"}>
-                      {(trader?.winRate ?? 0)}%
+                    <TableCell className={trader?.performance && trader.performance > 0 ? "text-green-500" : "text-gray-400"}>
+                      {(trader?.performance ?? 0)}%
                     </TableCell>
-                    <TableCell>{(trader?.totalTrades ?? 0).toLocaleString()}</TableCell>
                     <TableCell>
                       <Button
                         variant="outline"

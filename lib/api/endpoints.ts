@@ -40,6 +40,36 @@ import type {
   AdminUser,
 } from "@/lib/types";
 
+const multipartHeaders = { headers: { "Content-Type": "multipart/form-data" } };
+
+const buildCopyTraderFormData = (
+  data: Partial<CreateCopyTraderRequest>
+): FormData => {
+  const formData = new FormData();
+  if (data.name !== undefined) {
+    formData.append("name", data.name);
+  }
+  if (data.description !== undefined) {
+    formData.append("description", data.description);
+  }
+  if (data.performance !== undefined) {
+    formData.append("performance", data.performance.toString());
+  }
+  if (data.image instanceof File) {
+    formData.append("image", data.image);
+  }
+  return formData;
+};
+
+const buildDepositFormData = (data: DepositRequest): FormData => {
+  const formData = new FormData();
+  formData.append("methodId", data.methodId);
+  formData.append("amount", data.amount.toString());
+  formData.append("currency", data.currency);
+  formData.append("proof", data.proof);
+  return formData;
+};
+
 // Auth Endpoints
 export const authApi = {
   register: (data: RegisterRequest): Promise<AuthResponse> =>
@@ -82,10 +112,8 @@ export const userApi = {
   trade: (data: TradeRequest): Promise<void> => api.post("/user/trade", data),
   investRealEstate: (data: RealEstateInvestRequest): Promise<void> =>
     api.post("/user/real-estate/invest", data),
-  deposit: (formData: FormData): Promise<Deposit> =>
-    api.post("/user/deposit", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
+  deposit: (data: DepositRequest): Promise<Deposit> =>
+    api.post("/user/deposit", buildDepositFormData(data), multipartHeaders),
   withdrawal: (data: WithdrawalRequest): Promise<Withdrawal> =>
     api.post("/user/withdrawal", data),
   followCopyTrader: (data: { traderId: string }): Promise<void> =>
@@ -131,11 +159,16 @@ export const adminApi = {
   getMiningPools: (): Promise<MiningPool[]> =>
     api.get("/admin/mining-pools"),
   createCopyTrader: (data: CreateCopyTraderRequest): Promise<CopyTrader> =>
-    api.post("/admin/copy-trader", data),
+    api.post("/admin/copy-trader", buildCopyTraderFormData(data), multipartHeaders),
   updateCopyTrader: (
     id: string,
     data: Partial<CreateCopyTraderRequest>
-  ): Promise<CopyTrader> => api.patch(`/admin/copy-trader/${id}`, data),
+  ): Promise<CopyTrader> =>
+    api.patch(
+      `/admin/copy-trader/${id}`,
+      buildCopyTraderFormData(data),
+      multipartHeaders
+    ),
   getCopyTraders: (): Promise<CopyTrader[]> =>
     api.get("/admin/copy-traders"),
   createSubscriptionPlan: (

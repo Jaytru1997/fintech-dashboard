@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,14 @@ import { Deposit, DepositMethod } from "@/lib/types";
 import { toast } from "react-toastify";
 import { ArrowDownCircle, Upload } from "lucide-react";
 
+const formatDetailKey = (key: string) =>
+  key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
 export default function DepositsPage() {
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [methods, setMethods] = useState<DepositMethod[]>([]);
@@ -26,6 +34,11 @@ export default function DepositsPage() {
     currency: "USD",
     proof: null as File | null,
   });
+
+  const selectedMethod = useMemo(
+    () => methods.find((method) => method._id === formData.methodId),
+    [methods, formData.methodId]
+  );
 
   useEffect(() => {
     loadData();
@@ -69,14 +82,23 @@ export default function DepositsPage() {
       toast.error("Proof of payment is required");
       return;
     }
+    if (!formData.methodId) {
+      toast.error("Please select a deposit method");
+      return;
+    }
+    const amountValue = parseFloat(formData.amount);
+    if (Number.isNaN(amountValue) || amountValue <= 0) {
+      toast.error("Enter a valid amount");
+      return;
+    }
     setIsSubmitting(true);
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("methodId", formData.methodId);
-      formDataToSend.append("amount", formData.amount);
-      formDataToSend.append("currency", formData.currency);
-      formDataToSend.append("proof", formData.proof);
-      await userApi.deposit(formDataToSend);
+      await userApi.deposit({
+        methodId: formData.methodId,
+        amount: amountValue,
+        currency: formData.currency,
+        proof: formData.proof,
+      });
       toast.success("Deposit request submitted successfully!");
       setFormData({
         methodId: "",
@@ -182,6 +204,38 @@ export default function DepositsPage() {
                       required
                     />
                   </div>
+                {selectedMethod && (
+                  <div className="md:col-span-2 rounded-lg border border-gray-800 bg-background/40 p-4 space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-white">
+                        {selectedMethod.name} instructions
+                      </p>
+                      {selectedMethod.description && (
+                        <p className="text-xs text-gray-400 mt-1">{selectedMethod.description}</p>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      <span className="font-semibold text-white">Type:</span>{" "}
+                      {selectedMethod.type?.replace(/_/g, " ") || "N/A"}
+                    </div>
+                    {selectedMethod.details && Object.keys(selectedMethod.details).length > 0 ? (
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {Object.entries(selectedMethod.details).map(([key, value]) => (
+                          <div key={key} className="rounded border border-gray-800 p-2">
+                            <p className="text-[11px] uppercase tracking-wide text-gray-500">
+                              {formatDetailKey(key)}
+                            </p>
+                            <p className="text-sm text-white break-words">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500">
+                        No structured details provided for this method.
+                      </p>
+                    )}
+                  </div>
+                )}
                 </div>
 
                 <div className="space-y-2">

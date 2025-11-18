@@ -165,8 +165,7 @@ export interface CopyTrader {
   _id: string;
   name: string;
   description: string;
-  winRate: number;
-  totalTrades: number;
+  performance: number;
   image?: string;
   isFollowing?: boolean;
 }
@@ -174,8 +173,10 @@ export interface CopyTrader {
 export interface DepositMethod {
   _id: string;
   name: string;
-  description: string;
+  type: string;
+  description?: string;
   isActive: boolean;
+  details?: Record<string, string>;
 }
 
 export interface WithdrawalMethod {
@@ -281,9 +282,8 @@ export interface CreateMiningPoolRequest {
 export interface CreateCopyTraderRequest {
   name: string;
   description: string;
-  winRate: number;
-  totalTrades: number;
-  image?: string;
+  performance: number;
+  image?: File | null;
 }
 
 export interface CreateSubscriptionPlanRequest {
@@ -301,7 +301,9 @@ export interface CreateSignalPriceRequest {
 
 export interface CreateDepositMethodRequest {
   name: string;
-  description: string;
+  type: string;
+  description?: string;
+  details?: Record<string, string>;
   isActive: boolean;
 }
 
