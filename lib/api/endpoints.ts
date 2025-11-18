@@ -192,6 +192,14 @@ export const adminApi = {
     api.patch(`/admin/subscription-plan/${id}`, data),
   getSubscriptionPlans: (): Promise<SubscriptionPlan[]> =>
     api.get("/admin/subscription-plans"),
+  getUserSubscriptions: (): Promise<UserSubscription[]> =>
+    api.get("/admin/subscriptions"),
+  updateSubscriptionStatus: (
+    userId: string,
+    subscriptionId: string,
+    data: UpdateSubscriptionStatusRequest
+  ): Promise<UserSubscription> =>
+    api.patch(`/admin/users/${userId}/subscriptions/${subscriptionId}`, data),
   createSignalPrice: (data: CreateSignalPriceRequest): Promise<SignalPrice> =>
     api.post("/admin/signal-price", data),
   updateSignalPrice: (

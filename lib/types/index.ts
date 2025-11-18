@@ -166,6 +166,10 @@ export interface SubscriptionPlan {
 
 export interface UserSubscription {
   _id: string;
+  userId?: string | User;
+  user?: User;
+  userEmail?: string;
+  userName?: string;
   planId?: string | SubscriptionPlan;
   plan?: SubscriptionPlan;
   planName?: string;

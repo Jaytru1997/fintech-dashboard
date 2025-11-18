@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { userApi } from "@/lib/api/endpoints";
-import { SubscriptionPlan, UserSubscription, UpdateSubscriptionStatusRequest } from "@/lib/types";
+import { SubscriptionPlan, UserSubscription } from "@/lib/types";
 import { toast } from "react-toastify";
 import { CreditCard } from "lucide-react";
 
@@ -23,8 +22,6 @@ export default function SubscriptionsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [subscriptionAmount, setSubscriptionAmount] = useState("");
   const [amountError, setAmountError] = useState("");
-  const [statusDrafts, setStatusDrafts] = useState<Record<string, UpdateSubscriptionStatusRequest["status"]>>({});
-  const [statusUpdateId, setStatusUpdateId] = useState<string | null>(null);
 
   useEffect(() => {
     loadPlans();
@@ -168,45 +165,6 @@ export default function SubscriptionsPage() {
     }
   };
 
-  const USER_STATUS_OPTIONS: UpdateSubscriptionStatusRequest["status"][] = [
-    "pending",
-    "completed",
-    "canceled",
-  ];
-
-  const handleStatusDraftChange = (
-    subscriptionId: string,
-    value: UpdateSubscriptionStatusRequest["status"]
-  ) => {
-    setStatusDrafts((prev) => ({ ...prev, [subscriptionId]: value }));
-  };
-
-  const handleApplyStatus = async (subscriptionId?: string) => {
-    if (!subscriptionId) return;
-    const nextStatus = statusDrafts[subscriptionId];
-    if (!nextStatus) {
-      toast.error("Select a status to apply");
-      return;
-    }
-
-    setStatusUpdateId(subscriptionId);
-    try {
-      await userApi.updateSubscriptionStatus(subscriptionId, { status: nextStatus });
-      toast.success("Subscription status updated");
-      setStatusDrafts((prev) => {
-        const { [subscriptionId]: _, ...rest } = prev;
-        return rest;
-      });
-      loadSubscriptions();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to update status");
-    } finally {
-      setStatusUpdateId(null);
-    }
-  };
-
-  const normalizedStatus = (status?: string) => status?.toLowerCase();
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -281,12 +239,6 @@ export default function SubscriptionsPage() {
               const duration = resolveDuration(subscription);
               const statusLabel = (subscription.status || "active").toUpperCase();
               const startedOn = subscription.startDate || subscription.createdAt;
-              const subscriptionId = subscription._id;
-              const currentStatusNormalized = normalizedStatus(subscription.status);
-              const pendingStatus = subscriptionId ? statusDrafts[subscriptionId] : undefined;
-              const isStatusDirty =
-                !!pendingStatus && pendingStatus.toLowerCase() !== currentStatusNormalized;
-
               return (
                 <Card key={subscription._id} className="border border-white/5 bg-black/20">
                   <CardHeader className="space-y-2">
@@ -316,56 +268,6 @@ export default function SubscriptionsPage() {
                         {duration ? `${duration} days` : "—"}
                       </span>
                     </div>
-                    {subscriptionId && (
-                      <div className="pt-3 border-t border-white/5 space-y-2">
-                        <Label className="text-xs uppercase tracking-wide text-gray-400">
-                          Update Status
-                        </Label>
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                          <Select
-                            value={
-                              pendingStatus ??
-                              (USER_STATUS_OPTIONS.includes(
-                                currentStatusNormalized as UpdateSubscriptionStatusRequest["status"]
-                              )
-                                ? (currentStatusNormalized as UpdateSubscriptionStatusRequest["status"])
-                                : undefined)
-                            }
-                            onValueChange={(value) =>
-                              handleStatusDraftChange(
-                                subscriptionId,
-                                value as UpdateSubscriptionStatusRequest["status"]
-                              )
-                            }
-                            disabled={statusUpdateId === subscriptionId}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Choose status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {USER_STATUS_OPTIONS.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option.charAt(0).toUpperCase() + option.slice(1)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="outline"
-                            className="w-full sm:w-auto"
-                            disabled={!isStatusDirty || statusUpdateId === subscriptionId}
-                            onClick={() => handleApplyStatus(subscriptionId)}
-                          >
-                            {statusUpdateId === subscriptionId ? "Updating..." : "Apply"}
-                          </Button>
-                        </div>
-                        {currentStatusNormalized === "cancelled" && (
-                          <p className="text-xs text-gray-500">
-                            Status synced from backend. You can set it to pending or completed again if needed.
-                          </p>
-                        )}
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               );

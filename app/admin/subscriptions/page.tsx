@@ -8,10 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { adminApi } from "@/lib/api/endpoints";
-import { SubscriptionPlan, CreateSubscriptionPlanRequest } from "@/lib/types";
+import { SubscriptionPlan, CreateSubscriptionPlanRequest, UserSubscription, UpdateSubscriptionStatusRequest } from "@/lib/types";
 import { toast } from "react-toastify";
-import { CreditCard, Plus, Edit } from "lucide-react";
+import { Plus, Edit } from "lucide-react";
 
 export default function AdminSubscriptionsPage() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -26,9 +27,14 @@ export default function AdminSubscriptionsPage() {
     roi: 0,
     durationDays: 1,
   });
+  const [userSubscriptions, setUserSubscriptions] = useState<UserSubscription[]>([]);
+  const [isLoadingSubscriptions, setIsLoadingSubscriptions] = useState(true);
+  const [statusDrafts, setStatusDrafts] = useState<Record<string, UpdateSubscriptionStatusRequest["status"]>>({});
+  const [statusUpdateId, setStatusUpdateId] = useState<string | null>(null);
 
   useEffect(() => {
     loadPlans();
+    loadUserSubscriptions();
   }, []);
 
   const loadPlans = async () => {
@@ -60,6 +66,20 @@ export default function AdminSubscriptionsPage() {
       setPlans([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadUserSubscriptions = async () => {
+    setIsLoadingSubscriptions(true);
+    try {
+      const data = await adminApi.getUserSubscriptions();
+      setUserSubscriptions(Array.isArray(data) ? data : []);
+    } catch (error: any) {
+      console.error("Error loading user subscriptions:", error);
+      toast.error(error.response?.data?.message || error.message || "Failed to load user subscriptions");
+      setUserSubscriptions([]);
+    } finally {
+      setIsLoadingSubscriptions(false);
     }
   };
 
@@ -114,6 +134,135 @@ export default function AdminSubscriptionsPage() {
       roi: plan?.roi || 0,
       durationDays: plan?.durationDays || 1,
     });
+  };
+
+  const STATUS_OPTIONS: UpdateSubscriptionStatusRequest["status"][] = [
+    "pending",
+    "active",
+    "completed",
+    "canceled",
+    "cancelled",
+  ];
+
+  const normalizedStatus = (status?: string) => status?.toLowerCase();
+
+  const handleStatusDraftChange = (
+    subscriptionId: string,
+    value: UpdateSubscriptionStatusRequest["status"]
+  ) => {
+    setStatusDrafts((prev) => ({ ...prev, [subscriptionId]: value }));
+  };
+
+  const handleApplyStatus = async (subscriptionId?: string) => {
+    if (!subscriptionId) return;
+    const nextStatus = statusDrafts[subscriptionId];
+    if (!nextStatus) {
+      toast.error("Select a status to apply");
+      return;
+    }
+
+    const subscription = userSubscriptions.find((sub) => sub._id === subscriptionId);
+    if (!subscription) {
+      toast.error("Subscription not found");
+      return;
+    }
+
+    const userId = resolveUserId(subscription);
+    if (!userId) {
+      toast.error("User ID not found for this subscription");
+      return;
+    }
+
+    setStatusUpdateId(subscriptionId);
+    try {
+      await adminApi.updateSubscriptionStatus(userId, subscriptionId, { status: nextStatus });
+      toast.success("Subscription status updated");
+      setStatusDrafts((prev) => {
+        const { [subscriptionId]: _, ...rest } = prev;
+        return rest;
+      });
+      loadUserSubscriptions();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to update status");
+    } finally {
+      setStatusUpdateId(null);
+    }
+  };
+
+  const formatCurrency = (value?: number) => {
+    if (typeof value !== "number") return "—";
+    return value.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  };
+
+  const formatDate = (value?: string) => {
+    if (!value) return "—";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  };
+
+  const resolvePlanName = (subscription: UserSubscription) => {
+    if (subscription.planName) return subscription.planName;
+    if (subscription.plan && "name" in subscription.plan) return subscription.plan.name;
+    if (
+      subscription.planId &&
+      typeof subscription.planId === "object" &&
+      "name" in subscription.planId
+    ) {
+      return (subscription.planId as SubscriptionPlan).name;
+    }
+    if (typeof subscription.planId === "string") return subscription.planId;
+    return "Subscription";
+  };
+
+  const resolveUserFromSubscription = (subscription: UserSubscription) => {
+    if (subscription.user && typeof subscription.user === "object") return subscription.user;
+    if (subscription.userId && typeof subscription.userId === "object") {
+      return subscription.userId;
+    }
+    return undefined;
+  };
+
+  const resolveUserName = (subscription: UserSubscription) => {
+    if (subscription.userName) return subscription.userName;
+    const user = resolveUserFromSubscription(subscription);
+    if (user) {
+      const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
+      return fullName || user.email || user._id || "User";
+    }
+    if (typeof subscription.userId === "string") return subscription.userId;
+    return "User";
+  };
+
+  const resolveUserEmail = (subscription: UserSubscription) => {
+    const user = resolveUserFromSubscription(subscription);
+    if (user?.email) return user.email;
+    if (subscription.userEmail) return subscription.userEmail;
+    return "—";
+  };
+
+  const resolveUserId = (subscription: UserSubscription): string | null => {
+    if (typeof subscription.userId === "string") return subscription.userId;
+    const user = resolveUserFromSubscription(subscription);
+    if (user?._id) return user._id;
+    return null;
+  };
+
+  const getStatusClasses = (status?: string) => {
+    const normalized = status?.toLowerCase();
+    switch (normalized) {
+      case "completed":
+        return "bg-emerald-500/15 text-emerald-400";
+      case "pending":
+        return "bg-yellow-500/15 text-yellow-400";
+      case "canceled":
+      case "cancelled":
+        return "bg-red-500/15 text-red-400";
+      case "active":
+        return "bg-blue-500/15 text-blue-400";
+      default:
+        return "bg-primary/15 text-primary";
+    }
   };
 
   if (isLoading) {
@@ -293,6 +442,131 @@ export default function AdminSubscriptionsPage() {
               )}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>User Subscriptions</CardTitle>
+          <p className="text-sm text-gray-400">
+            Review every active plan and control subscription statuses from a single place.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {isLoadingSubscriptions ? (
+            <div className="py-12 text-center text-gray-400">
+              Loading user subscriptions...
+            </div>
+          ) : userSubscriptions.length === 0 ? (
+            <div className="py-10 text-center text-gray-400">
+              No user subscriptions found
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Plan</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>ROI / Duration</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[220px]">Update Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {userSubscriptions.map((subscription) => {
+                  const subscriptionId = subscription._id;
+                  const currentStatusNormalized = normalizedStatus(subscription.status);
+                  const pendingStatus = subscriptionId ? statusDrafts[subscriptionId] : undefined;
+                  const selectValue =
+                    pendingStatus ??
+                    (currentStatusNormalized &&
+                    STATUS_OPTIONS.includes(
+                      currentStatusNormalized as UpdateSubscriptionStatusRequest["status"]
+                    )
+                      ? (currentStatusNormalized as UpdateSubscriptionStatusRequest["status"])
+                      : undefined);
+                  const isStatusDirty =
+                    !!pendingStatus && pendingStatus.toLowerCase() !== currentStatusNormalized;
+
+                  return (
+                    <TableRow key={subscription._id}>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{resolveUserName(subscription)}</span>
+                          {typeof subscription.userId === "string" && (
+                            <span className="text-xs text-gray-500">
+                              ID: {subscription.userId}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{resolveUserEmail(subscription)}</TableCell>
+                      <TableCell>{resolvePlanName(subscription)}</TableCell>
+                      <TableCell>{formatCurrency(subscription.amount)}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1 text-sm">
+                          <span>{subscription.roi ?? subscription.plan?.roi ?? "—"}%</span>
+                          <span className="text-xs text-gray-500">
+                            {(subscription.durationDays ??
+                              subscription.plan?.durationDays ??
+                              "—") + " days"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full font-medium inline-flex ${getStatusClasses(
+                            subscription.status
+                          )}`}
+                        >
+                          {(subscription.status || "active").toUpperCase()}
+                        </span>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Started {formatDate(subscription.startDate || subscription.createdAt)}
+                          {subscription.endDate && ` • Ends ${formatDate(subscription.endDate)}`}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <Select
+                            value={selectValue}
+                            onValueChange={(value) =>
+                              handleStatusDraftChange(
+                                subscriptionId,
+                                value as UpdateSubscriptionStatusRequest["status"]
+                              )
+                            }
+                            disabled={statusUpdateId === subscriptionId}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Choose status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STATUS_OPTIONS.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="outline"
+                            className="w-full sm:w-auto"
+                            disabled={!isStatusDirty || statusUpdateId === subscriptionId}
+                            onClick={() => handleApplyStatus(subscriptionId)}
+                          >
+                            {statusUpdateId === subscriptionId ? "Updating..." : "Apply"}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </motion.div>
