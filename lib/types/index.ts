@@ -102,7 +102,7 @@ export interface Withdrawal {
 
 export interface Staking {
   _id: string;
-  poolId: string;
+  poolId: string | MiningPool;
   userId?: string;
   amount: number;
   roi: number;

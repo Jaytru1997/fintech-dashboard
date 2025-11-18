@@ -46,6 +46,12 @@ export default function MiningPage() {
     }
   };
 
+  const getPoolLabel = (pool: Staking["poolId"]) => {
+    if (!pool) return "N/A";
+    if (typeof pool === "string") return pool || "N/A";
+    return pool.name || pool._id || "N/A";
+  };
+
   const handleStake = async () => {
     if (!selectedPool || !amount) return;
     setIsSubmitting(true);
@@ -206,7 +212,7 @@ export default function MiningPage() {
                   ) : (
                     stakings.map((staking) => (
                       <TableRow key={staking._id}>
-                        <TableCell>{staking.poolId || "N/A"}</TableCell>
+                        <TableCell>{getPoolLabel(staking.poolId)}</TableCell>
                         <TableCell>${staking.amount.toLocaleString()}</TableCell>
                         <TableCell>
                           {staking.startDate && staking.endDate

@@ -4,21 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { useAuthStore } from "@/stores/auth";
 import { useUserStore } from "@/stores/user";
 import { userApi } from "@/lib/api/endpoints";
@@ -33,20 +18,17 @@ import {
 import Link from "next/link";
 import { toast } from "react-toastify";
 import { SignalStrengthBar } from "@/components/ui/SignalStrengthBar";
+import { QuickTradePanel } from "@/components/trading/QuickTradePanel";
+import { TradingViewWidget } from "@/components/trading/TradingViewWidget";
+import { formatPairToTradingViewSymbol } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const { balances, setBalances } = useUserStore();
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmittingTrade, setIsSubmittingTrade] = useState(false);
-  const [tradeSide, setTradeSide] = useState<"BUY" | "SELL">("BUY");
-  const [quickTrade, setQuickTrade] = useState({
-    tradeType: "Crypto",
-    pair: "BTC/USD",
-    amount: "100",
-    leverage: "5",
-    durationMinutes: "2",
-  });
+  const [chartPair, setChartPair] = useState("BTC/USD");
+  const chartSymbol = formatPairToTradingViewSymbol(chartPair);
+  const selectablePairs = useMemo(() => Array.from(new Set([chartPair, "BTC/USD", "ETH/USD", "SOL/USD"])), [chartPair]);
 
   useEffect(() => {
     loadData();
@@ -74,38 +56,6 @@ export default function DashboardPage() {
       toast.error("Failed to load dashboard data");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const leverageValue = useMemo(
-    () => Math.min(100, Math.max(1, Number(quickTrade.leverage) || 1)),
-    [quickTrade.leverage]
-  );
-
-  const handleQuickTrade = async () => {
-    if (isSubmittingTrade) return;
-    const amountNum = parseFloat(quickTrade.amount);
-    if (!quickTrade.tradeType || !quickTrade.pair || !amountNum || amountNum <= 0) {
-      toast.error("Enter a valid amount to trade");
-      return;
-    }
-    setIsSubmittingTrade(true);
-    try {
-      const durationMinutes = parseInt(quickTrade.durationMinutes, 10) || 2;
-      const durationHours = durationMinutes / 60;
-      await userApi.trade({
-        tradeType: quickTrade.tradeType,
-        pair: quickTrade.pair,
-        amount: amountNum,
-        leverage: leverageValue,
-        duration: durationHours,
-        direction: tradeSide,
-      });
-      toast.success("Quick trade submitted");
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Quick trade failed");
-    } finally {
-      setIsSubmittingTrade(false);
     }
   };
 
@@ -272,227 +222,20 @@ export default function DashboardPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-gray-300">Market chart</CardTitle>
           </CardHeader>
-          <CardContent className="max-w-full" style={{ minWidth: 0 }}>
-            <div className="relative h-[260px] md:h-[320px] rounded-xl border border-gray-800 bg-background-dark overflow-hidden">
-              {/* This is a placeholder for a full TradingView chart embed */}
-              <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_0%_0%,#22c55e_0,transparent_55%),radial-gradient(circle_at_100%_100%,#0ea5e9_0,transparent_55%)]" />
-              <div className="relative z-10 flex h-full items-center justify-center">
-                <p className="text-xs md:text-sm text-gray-300 text-center px-6">
-                  Connect your TradingView chart here to mirror live price action across your
-                  favourite markets.
-                </p>
-              </div>
+          <CardContent className="max-w-full h-full" style={{ minWidth: 0 }}>
+            <div className="relative w-full aspect-[9/16] lg:aspect-[16/9] rounded-xl border border-gray-800 bg-background-dark overflow-hidden">
+              <TradingViewWidget symbol={chartSymbol} className="absolute inset-0" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-background-darkest/80 border-none">
-          <CardHeader className="pb-3 space-y-4">
-            <Tabs
-              value={tradeSide === "BUY" ? "buy" : "sell"}
-              onValueChange={(val) => setTradeSide(val === "buy" ? "BUY" : "SELL")}
-            >
-              <TabsList className="grid grid-cols-3 bg-background-dark">
-                <TabsTrigger value="buy" className="text-xs">
-                  Buy
-                </TabsTrigger>
-                <TabsTrigger value="sell" className="text-xs">
-                  Sell
-                </TabsTrigger>
-                <TabsTrigger value="convert" disabled className="text-xs">
-                  Convert
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="buy" className="pt-4" />
-              <TabsContent value="sell" className="pt-4" />
-              <TabsContent value="convert" className="pt-4" />
-            </Tabs>
-          </CardHeader>
-          <CardContent className="space-y-4 text-xs md:text-sm">
-            <div className="space-y-2">
-              <Label htmlFor="qt-trade-type">Trade type</Label>
-              <Select
-                value={quickTrade.tradeType}
-                onValueChange={(value) =>
-                  setQuickTrade((prev) => ({ ...prev, tradeType: value }))
-                }
-              >
-                <SelectTrigger id="qt-trade-type" className="h-9 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Crypto">Crypto</SelectItem>
-                  <SelectItem value="CFD">CFD</SelectItem>
-                  <SelectItem value="Forex">Forex</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="qt-amount">Amount</Label>
-              <div className="flex items-center gap-2 rounded-lg bg-background-dark border border-gray-800 px-3">
-                <Input
-                  id="qt-amount"
-                  type="number"
-                  min="0"
-                  className="h-9 border-none bg-transparent px-0 text-xs flex-1"
-                  value={quickTrade.amount}
-                  onChange={(e) =>
-                    setQuickTrade((prev) => ({ ...prev, amount: e.target.value }))
-                  }
-                />
-                <Select
-                  value={quickTrade.pair}
-                  onValueChange={(value) =>
-                    setQuickTrade((prev) => ({ ...prev, pair: value }))
-                  }
-                >
-                  <SelectTrigger className="h-7 w-28 text-[11px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="BTC/USD">BTC</SelectItem>
-                    <SelectItem value="ETH/USD">ETH</SelectItem>
-                    <SelectItem value="SOL/USD">SOL</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-1 text-[11px] text-gray-400">
-              <div className="flex justify-between">
-                <span>Current USD balance:</span>
-                <span>
-                  {balances?.main?.amount?.toLocaleString() || 0}{" "}
-                  {balances?.main?.currency || "USD"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Current BTC price:</span>
-                <span className="text-emerald-400">$--,--</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-[11px] text-gray-400">
-                <span>Leverage</span>
-                <span className="font-semibold text-primary">
-                  {leverageValue.toFixed(0)}x
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] text-gray-500 justify-between">
-                <span>0x</span>
-                <span>25x</span>
-                <span>50x</span>
-                <span>75x</span>
-                <span>100x</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1 h-10 rounded-lg bg-background-dark border border-gray-800 px-3 flex items-center">
-                  {/* Ruler backdrop */}
-                  <div className="absolute left-3 right-3 h-1 rounded-full bg-gradient-to-r from-gray-500 via-emerald-400 via-yellow-300 to-red-500" />
-                  {/* Graduated ticks every 5x, major every 20x */}
-                  <div className="absolute inset-x-3 bottom-1.5 flex h-4 items-end pointer-events-none">
-                    {Array.from({ length: 21 }).map((_, index) => {
-                      const value = index * 5; // 0..100
-                      const isMajor = value % 20 === 0;
-                      let color = "#6b7280"; // ash / gray
-                      if (value >= 60 && value < 85) color = "#f97316"; // orange
-                      if (value >= 85) color = "#ef4444"; // red
-                      return (
-                        <div key={value} className="flex-1 flex justify-center">
-                          <div
-                            style={{
-                              width: isMajor ? 2 : 1,
-                              height: isMajor ? 16 : 8,
-                              backgroundColor: color,
-                              opacity: 0.8,
-                            }}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {/* Continuous slider on top, like an accelerator */}
-                  <input
-                    type="range"
-                    min={1}
-                    max={100}
-                    value={leverageValue}
-                    onChange={(e) =>
-                      setQuickTrade((prev) => ({ ...prev, leverage: e.target.value }))
-                    }
-                    className="relative z-10 w-full h-1 bg-transparent appearance-none cursor-pointer"
-                  />
-                  <style jsx>{`
-                    input[type="range"]::-webkit-slider-runnable-track {
-                      height: 4px;
-                      background: transparent;
-                    }
-                    input[type="range"]::-moz-range-track {
-                      height: 4px;
-                      background: transparent;
-                    }
-                    input[type="range"]::-webkit-slider-thumb {
-                      -webkit-appearance: none;
-                      appearance: none;
-                      margin-top: -6px;
-                      height: 16px;
-                      width: 16px;
-                      border-radius: 9999px;
-                      background: #020617;
-                      border: 2px solid #f97316;
-                      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.35);
-                    }
-                    input[type="range"]::-moz-range-thumb {
-                      height: 16px;
-                      width: 16px;
-                      border-radius: 9999px;
-                      background: #020617;
-                      border: 2px solid #f97316;
-                      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.35);
-                    }
-                  `}</style>
-                </div>
-                <div className="px-3 py-1 rounded-md bg-background-dark border border-gray-800 text-[11px] text-gray-200">
-                  {leverageValue.toFixed(0)}x
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="qt-duration">Duration</Label>
-              <Select
-                value={quickTrade.durationMinutes}
-                onValueChange={(value) =>
-                  setQuickTrade((prev) => ({ ...prev, durationMinutes: value }))
-                }
-              >
-                <SelectTrigger id="qt-duration" className="h-9 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2">2 minutes</SelectItem>
-                  <SelectItem value="5">5 minutes</SelectItem>
-                  <SelectItem value="15">15 minutes</SelectItem>
-                  <SelectItem value="60">1 hour</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button
-              className="w-full mt-2"
-              disabled={isSubmittingTrade}
-              onClick={handleQuickTrade}
-            >
-              {isSubmittingTrade
-                ? "Submitting..."
-                : tradeSide === "BUY"
-                ? "Buy"
-                : "Sell"}
-            </Button>
-          </CardContent>
-        </Card>
+        <QuickTradePanel
+          balances={balances}
+          initialPair={chartPair}
+          onPairChange={setChartPair}
+          pairs={selectablePairs}
+          className="bg-background-darkest/80"
+        />
       </div>
 
       {/* Bottom: quick actions + trades summary placeholder */}

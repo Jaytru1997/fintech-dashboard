@@ -1,65 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-// Lightweight TradingView widget loader
-const useTradingViewScript = (id: string, scriptInnerHTML: string) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    // Avoid injecting multiple times
-    if (containerRef.current.querySelector("script")) return;
-
-    const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.async = true;
-    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js";
-    script.innerHTML = scriptInnerHTML;
-    containerRef.current.appendChild(script);
-  }, [id, scriptInnerHTML]);
-
-  return containerRef;
-};
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { POPULAR_ASSETS } from "@/lib/constants/assets";
+import { useRouter } from "next/navigation";
 
 export default function AssetsPage() {
-  const majorPairsConfig = JSON.stringify(
-    {
-      symbols: [
-        ["BITSTAMP:BTCUSD", "BTC / USD"],
-        ["BITSTAMP:ETHUSD", "ETH / USD"],
-        ["OANDA:EURUSD", "EUR / USD"],
-        ["OANDA:GBPUSD", "GBP / USD"],
-      ],
-      chartOnly: false,
-      width: "100%",
-      height: 400,
-      locale: "en",
-      colorTheme: "dark",
-      autosize: true,
-      showVolume: false,
-      showMA: false,
-      hideDateRanges: false,
-      hideMarketStatus: false,
-      hideSymbolLogo: false,
-      scalePosition: "right",
-      scaleMode: "normal",
-      fontFamily:
-        "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
-      noTimeScale: false,
-      valuesTracking: "1",
-      container_id: "tradingview-assets-major",
-    },
-    null,
-    2
-  );
+  const router = useRouter();
 
-  const cryptoMajorsRef = useTradingViewScript(
-    "tradingview-assets-major",
-    majorPairsConfig
-  );
+  const handleTrade = (symbol: string) => {
+    router.push(`/dashboard/trading?symbol=${encodeURIComponent(symbol)}`);
+  };
 
   return (
     <motion.div
@@ -72,26 +25,51 @@ export default function AssetsPage() {
       <div>
         <h1 className="text-2xl font-semibold text-white">Assets</h1>
         <p className="text-gray-400 mt-2">
-          Explore key crypto and FX assets with live market data.
+          Browse the 50 most traded crypto, forex, and commodity markets. Jump straight into a trade with one click.
         </p>
       </div>
 
       <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle>Major Markets Overview</CardTitle>
+          <CardTitle>Popular Tradable Markets</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="tradingview-widget-container">
-            <div
-              id="tradingview-assets-major"
-              ref={cryptoMajorsRef}
-              className="min-h-[400px]"
-            />
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Asset</TableHead>
+                  <TableHead>Pair</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {POPULAR_ASSETS.slice(0, 50).map((asset) => (
+                  <TableRow key={asset.symbol}>
+                    <TableCell>
+                      <div className="font-medium text-white">{asset.name}</div>
+                      <div className="text-xs text-gray-500">{asset.symbol}</div>
+                    </TableCell>
+                    <TableCell className="text-gray-300">{asset.pair}</TableCell>
+                    <TableCell>
+                      <span className="px-2 py-1 rounded-full bg-background-dark text-xs text-gray-300 border border-gray-800">
+                        {asset.category}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" onClick={() => handleTrade(asset.symbol)}>
+                        Trade
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
     </motion.div>
   );
 }
-
 

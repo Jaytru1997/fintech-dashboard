@@ -1,0 +1,62 @@
+export interface AssetMeta {
+  pair: string;
+  symbol: string;
+  name: string;
+  category: "Crypto" | "Forex" | "Commodities";
+}
+
+export const POPULAR_ASSETS: AssetMeta[] = [
+  { pair: "BTC/USD", symbol: "BINANCE:BTCUSDT", name: "Bitcoin", category: "Crypto" },
+  { pair: "ETH/USD", symbol: "BINANCE:ETHUSDT", name: "Ethereum", category: "Crypto" },
+  { pair: "SOL/USD", symbol: "BINANCE:SOLUSDT", name: "Solana", category: "Crypto" },
+  { pair: "XRP/USD", symbol: "BINANCE:XRPUSDT", name: "XRP", category: "Crypto" },
+  { pair: "ADA/USD", symbol: "BINANCE:ADAUSDT", name: "Cardano", category: "Crypto" },
+  { pair: "DOGE/USD", symbol: "BINANCE:DOGEUSDT", name: "Dogecoin", category: "Crypto" },
+  { pair: "AVAX/USD", symbol: "BINANCE:AVAXUSDT", name: "Avalanche", category: "Crypto" },
+  { pair: "MATIC/USD", symbol: "BINANCE:MATICUSDT", name: "Polygon", category: "Crypto" },
+  { pair: "DOT/USD", symbol: "BINANCE:DOTUSDT", name: "Polkadot", category: "Crypto" },
+  { pair: "LINK/USD", symbol: "BINANCE:LINKUSDT", name: "Chainlink", category: "Crypto" },
+  { pair: "LTC/USD", symbol: "BINANCE:LTCUSDT", name: "Litecoin", category: "Crypto" },
+  { pair: "BCH/USD", symbol: "BINANCE:BCHUSDT", name: "Bitcoin Cash", category: "Crypto" },
+  { pair: "TRX/USD", symbol: "BINANCE:TRXUSDT", name: "TRON", category: "Crypto" },
+  { pair: "SHIB/USD", symbol: "BINANCE:SHIBUSDT", name: "Shiba Inu", category: "Crypto" },
+  { pair: "ATOM/USD", symbol: "BINANCE:ATOMUSDT", name: "Cosmos", category: "Crypto" },
+  { pair: "XLM/USD", symbol: "BINANCE:XLMUSDT", name: "Stellar", category: "Crypto" },
+  { pair: "ICP/USD", symbol: "BINANCE:ICPUSDT", name: "Internet Computer", category: "Crypto" },
+  { pair: "APT/USD", symbol: "BINANCE:APTUSDT", name: "Aptos", category: "Crypto" },
+  { pair: "FIL/USD", symbol: "BINANCE:FILUSDT", name: "Filecoin", category: "Crypto" },
+  { pair: "SUI/USD", symbol: "BINANCE:SUIUSDT", name: "Sui", category: "Crypto" },
+  { pair: "OP/USD", symbol: "BINANCE:OPUSDT", name: "Optimism", category: "Crypto" },
+  { pair: "ARB/USD", symbol: "BINANCE:ARBUSDT", name: "Arbitrum", category: "Crypto" },
+  { pair: "NEAR/USD", symbol: "BINANCE:NEARUSDT", name: "NEAR Protocol", category: "Crypto" },
+  { pair: "ALGO/USD", symbol: "BINANCE:ALGOUSDT", name: "Algorand", category: "Crypto" },
+  { pair: "AAVE/USD", symbol: "BINANCE:AAVEUSDT", name: "Aave", category: "Crypto" },
+  { pair: "EOS/USD", symbol: "BINANCE:EOSUSDT", name: "EOS", category: "Crypto" },
+  { pair: "SAND/USD", symbol: "BINANCE:SANDUSDT", name: "The Sandbox", category: "Crypto" },
+  { pair: "MANA/USD", symbol: "BINANCE:MANAUSDT", name: "Decentraland", category: "Crypto" },
+  { pair: "GRT/USD", symbol: "BINANCE:GRTUSDT", name: "The Graph", category: "Crypto" },
+  { pair: "CHZ/USD", symbol: "BINANCE:CHZUSDT", name: "Chiliz", category: "Crypto" },
+  { pair: "CRV/USD", symbol: "BINANCE:CRVUSDT", name: "Curve DAO", category: "Crypto" },
+  { pair: "RUNE/USD", symbol: "BINANCE:RUNEUSDT", name: "THORChain", category: "Crypto" },
+  { pair: "KAVA/USD", symbol: "BINANCE:KAVAUSDT", name: "Kava", category: "Crypto" },
+  { pair: "LDO/USD", symbol: "BINANCE:LDOUSDT", name: "Lido DAO", category: "Crypto" },
+  { pair: "RNDR/USD", symbol: "BINANCE:RNDRUSDT", name: "Render", category: "Crypto" },
+  { pair: "INJ/USD", symbol: "BINANCE:INJUSDT", name: "Injective", category: "Crypto" },
+  { pair: "STX/USD", symbol: "BINANCE:STXUSDT", name: "Stacks", category: "Crypto" },
+  { pair: "IMX/USD", symbol: "BINANCE:IMXUSDT", name: "Immutable", category: "Crypto" },
+  { pair: "DYDX/USD", symbol: "BINANCE:DYDXUSDT", name: "dYdX", category: "Crypto" },
+  { pair: "GMX/USD", symbol: "BINANCE:GMXUSDT", name: "GMX", category: "Crypto" },
+  { pair: "EUR/USD", symbol: "FX:EURUSD", name: "Euro / US Dollar", category: "Forex" },
+  { pair: "GBP/USD", symbol: "FX:GBPUSD", name: "British Pound / US Dollar", category: "Forex" },
+  { pair: "USD/JPY", symbol: "FX:USDJPY", name: "US Dollar / Japanese Yen", category: "Forex" },
+  { pair: "AUD/USD", symbol: "FX:AUDUSD", name: "Australian Dollar / US Dollar", category: "Forex" },
+  { pair: "USD/CAD", symbol: "FX:USDCAD", name: "US Dollar / Canadian Dollar", category: "Forex" },
+  { pair: "NZD/USD", symbol: "FX:NZDUSD", name: "New Zealand Dollar / US Dollar", category: "Forex" },
+  { pair: "USD/CHF", symbol: "FX:USDCHF", name: "US Dollar / Swiss Franc", category: "Forex" },
+  { pair: "XAU/USD", symbol: "OANDA:XAUUSD", name: "Gold", category: "Commodities" },
+  { pair: "XAG/USD", symbol: "OANDA:XAGUSD", name: "Silver", category: "Commodities" },
+  { pair: "USOIL", symbol: "TVC:USOIL", name: "Crude Oil (WTI)", category: "Commodities" },
+  { pair: "BTC/ETH", symbol: "BINANCE:ETHBTC", name: "ETH/BTC", category: "Crypto" },
+];
+
+
