@@ -13,17 +13,19 @@ import { TradingViewWidget } from "@/components/trading/TradingViewWidget";
 import { formatPairToTradingViewSymbol, mapTradingViewSymbolToPair } from "@/lib/utils";
 import { useUserStore } from "@/stores/user";
 import { useSearchParams } from "next/navigation";
+import { getStoredTradePair, setStoredTradePair } from "@/lib/storage/tradePair";
 
 const tradePairs = ["BTC/USD", "ETH/USD", "EUR/USD", "GBP/USD"];
 
 export default function TradingPage() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { balances } = useUserStore();
+  const { balances, setBalances } = useUserStore();
   const searchParams = useSearchParams();
   const symbolFromQuery = searchParams.get("symbol") || undefined;
   const pairFromSymbol = mapTradingViewSymbolToPair(symbolFromQuery);
-  const defaultPair = pairFromSymbol || tradePairs[0];
+  const storedPair = getStoredTradePair();
+  const defaultPair = pairFromSymbol || storedPair || tradePairs[0];
   const [chartPair, setChartPair] = useState(defaultPair);
   const chartSymbol = formatPairToTradingViewSymbol(chartPair);
 
@@ -34,10 +36,30 @@ export default function TradingPage() {
   }, []);
 
   useEffect(() => {
+    const loadBalances = async () => {
+      if (balances) return;
+      try {
+        const balanceData = await userApi.getBalances();
+        setBalances(balanceData);
+      } catch (error) {
+        console.error("Failed to load balances for trading page", error);
+      }
+    };
+
+    loadBalances();
+  }, [balances, setBalances]);
+
+  useEffect(() => {
     if (pairFromSymbol) {
       setChartPair(pairFromSymbol);
     }
   }, [pairFromSymbol]);
+
+  useEffect(() => {
+    if (chartPair) {
+      setStoredTradePair(chartPair);
+    }
+  }, [chartPair]);
 
   const loadTrades = async () => {
     try {

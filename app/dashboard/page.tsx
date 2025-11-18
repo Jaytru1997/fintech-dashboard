@@ -21,20 +21,17 @@ import { SignalStrengthBar } from "@/components/ui/SignalStrengthBar";
 import { QuickTradePanel } from "@/components/trading/QuickTradePanel";
 import { TradingViewWidget } from "@/components/trading/TradingViewWidget";
 import { formatPairToTradingViewSymbol } from "@/lib/utils";
+import { getStoredTradePair, setStoredTradePair } from "@/lib/storage/tradePair";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const { balances, setBalances } = useUserStore();
   const [isLoading, setIsLoading] = useState(true);
-  const [chartPair, setChartPair] = useState("BTC/USD");
+  const [chartPair, setChartPair] = useState<string>(getStoredTradePair() || "BTC/USD");
   const chartSymbol = formatPairToTradingViewSymbol(chartPair);
   const selectablePairs = useMemo(() => Array.from(new Set([chartPair, "BTC/USD", "ETH/USD", "SOL/USD"])), [chartPair]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = async (): Promise<void> => {
     // If balances are already available from login, use them and skip API call
     if (balances) {
       setIsLoading(false);
@@ -58,6 +55,16 @@ export default function DashboardPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (chartPair) {
+      setStoredTradePair(chartPair);
+    }
+  }, [chartPair]);
 
   if (isLoading) {
     return (

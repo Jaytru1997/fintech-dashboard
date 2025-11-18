@@ -6,12 +6,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { POPULAR_ASSETS } from "@/lib/constants/assets";
 import { useRouter } from "next/navigation";
+import { setStoredTradePair } from "@/lib/storage/tradePair";
 
 export default function AssetsPage() {
   const router = useRouter();
 
-  const handleTrade = (symbol: string) => {
-    router.push(`/dashboard/trading?symbol=${encodeURIComponent(symbol)}`);
+  const handleTrade = (pair: string) => {
+    setStoredTradePair(pair);
+    router.push("/dashboard/trading");
   };
 
   return (
@@ -58,7 +60,7 @@ export default function AssetsPage() {
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button size="sm" onClick={() => handleTrade(asset.symbol)}>
+                      <Button size="sm" onClick={() => handleTrade(asset.pair)}>
                         Trade
                       </Button>
                     </TableCell>

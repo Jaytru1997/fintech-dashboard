@@ -12,6 +12,7 @@ import { userApi } from "@/lib/api/endpoints";
 import type { Balances } from "@/lib/types";
 import clsx from "clsx";
 import { Checkbox } from "@/components/ui/checkbox";
+import { setStoredTradePair } from "@/lib/storage/tradePair";
 
 type TradeSide = "BUY" | "SELL";
 
@@ -90,6 +91,12 @@ export function QuickTradePanel({
   }, [quickTrade.pair, onPairChange]);
 
   useEffect(() => {
+    if (quickTrade.pair) {
+      setStoredTradePair(quickTrade.pair);
+    }
+  }, [quickTrade.pair]);
+
+  useEffect(() => {
     let isMounted = true;
     const fetchPrice = async () => {
       if (!quickTrade.pair) {
@@ -103,65 +110,16 @@ export function QuickTradePanel({
       }
       setIsPriceLoading(true);
       try {
-        const cryptoSymbols = new Set([
-          "BTC",
-          "ETH",
-          "SOL",
-          "XRP",
-          "ADA",
-          "DOGE",
-          "AVAX",
-          "MATIC",
-          "DOT",
-          "LINK",
-          "LTC",
-          "BCH",
-          "TRX",
-          "ATOM",
-          "XLM",
-          "ICP",
-          "APT",
-          "FIL",
-          "SUI",
-          "OP",
-          "ARB",
-          "NEAR",
-          "ALGO",
-          "AAVE",
-          "EOS",
-          "SAND",
-          "MANA",
-          "GRT",
-          "CHZ",
-          "CRV",
-          "RUNE",
-          "KAVA",
-          "LDO",
-          "RNDR",
-          "INJ",
-          "STX",
-          "IMX",
-          "DYDX",
-          "GMX",
-        ]);
-
+        const baseKey = base.toLowerCase();
+        const quoteKey = quote.toLowerCase();
         let price: number | null = null;
-        if (cryptoSymbols.has(base.toUpperCase())) {
-          const response = await fetch(
-            `https://min-api.cryptocompare.com/data/price?fsym=${base.toUpperCase()}&tsyms=${quote.toUpperCase()}`
-          );
-          const data = await response.json();
-          if (data && data[quote.toUpperCase()]) {
-            price = Number(data[quote.toUpperCase()]);
-          }
-        } else {
-          const response = await fetch(
-            `https://api.exchangerate.host/convert?from=${base.toUpperCase()}&to=${quote.toUpperCase()}`
-          );
-          const data = await response.json();
-          if (data?.result) {
-            price = Number(data.result);
-          }
+        const response = await fetch(
+          `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${baseKey}.json`
+        );
+        const data = await response.json();
+        const baseRates = data?.[baseKey];
+        if (baseRates && typeof baseRates[quoteKey] !== "undefined") {
+          price = Number(baseRates[quoteKey]);
         }
         if (isMounted) {
           setLivePrice(

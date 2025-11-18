@@ -17,9 +17,12 @@ export default function AdminTradesPage() {
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    status: "" | "open" | "closed" | "canceled";
+    result: "" | "win" | "loss";
+  }>({
     status: "",
-    result: "" as "win" | "loss" | "draw" | "",
+    result: "",
   });
 
   useEffect(() => {
@@ -184,10 +187,9 @@ export default function AdminTradesPage() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="pending">Pending</SelectItem>
-                                  <SelectItem value="active">Active</SelectItem>
-                                  <SelectItem value="completed">Completed</SelectItem>
-                                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                                  <SelectItem value="open">Open</SelectItem>
+                                  <SelectItem value="closed">Closed</SelectItem>
+                                  <SelectItem value="canceled">Canceled</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -196,7 +198,7 @@ export default function AdminTradesPage() {
                               <Select
                                 value={formData.result}
                                 onValueChange={(value) =>
-                                  setFormData({ ...formData, result: value as "win" | "loss" | "draw" | "" })
+                                  setFormData({ ...formData, result: value as "win" | "loss" | "" })
                                 }
                               >
                                 <SelectTrigger>
@@ -205,7 +207,6 @@ export default function AdminTradesPage() {
                                 <SelectContent>
                                   <SelectItem value="win">Win</SelectItem>
                                   <SelectItem value="loss">Loss</SelectItem>
-                                  <SelectItem value="draw">Draw</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
