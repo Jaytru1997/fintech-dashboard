@@ -19,6 +19,7 @@ import {
   User,
   Settings,
   LogOut,
+  BarChart2,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth";
 import { useUserStore } from "@/stores/user";
@@ -35,6 +36,8 @@ const userNavItems = [
   { href: "/dashboard/signal", label: "Signal", icon: TrendingUp },
   { href: "/dashboard/mining", label: "Mining", icon: Activity },
   { href: "/dashboard/trading", label: "Trading", icon: TrendingUp },
+  { href: "/dashboard/assets", label: "Assets", icon: BarChart2 },
+  { href: "/dashboard/markets", label: "Markets", icon: BarChart2 },
   { href: "/dashboard/real-estate", label: "Real Estate", icon: Building2 },
   { href: "/dashboard/copy-trading", label: "Copy Trading", icon: Copy },
   { href: "/dashboard/profile", label: "Profile", icon: User },

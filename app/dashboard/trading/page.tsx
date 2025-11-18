@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,11 @@ export default function TradingPage() {
     swapPair: "",
   });
 
+  const leverageValue = useMemo(
+    () => Math.min(100, Math.max(1, Number(formData.leverage) || 1)),
+    [formData.leverage]
+  );
+
   useEffect(() => {
     loadTrades();
   }, []);
@@ -61,7 +66,7 @@ export default function TradingPage() {
         tradeType: formData.tradeType,
         pair: formData.pair,
         amount: parseFloat(formData.amount),
-        leverage: parseFloat(formData.leverage),
+        leverage: leverageValue,
         takeProfit: formData.takeProfit ? parseFloat(formData.takeProfit) : undefined,
         stopLoss: formData.stopLoss ? parseFloat(formData.stopLoss) : undefined,
         duration: parseInt(formData.duration), // Duration in hours
@@ -113,6 +118,21 @@ export default function TradingPage() {
         </p>
       </div>
 
+      {/* Simple market ticker row */}
+      <Card className="overflow-hidden">
+        <CardContent className="py-3">
+          <div className="flex flex-nowrap gap-6 animate-[marquee_40s_linear_infinite] whitespace-nowrap text-xs md:text-sm">
+            {tradePairs.map((pair, idx) => (
+              <div key={pair + idx} className="flex items-center gap-2 text-gray-300">
+                <span className="font-semibold text-white">{pair}</span>
+                <span className="text-emerald-400">+{(Math.random() * 2).toFixed(2)}%</span>
+                <span className="text-gray-500">|</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="execute" className="space-y-4">
         <TabsList>
           <TabsTrigger value="execute">Execute Trade</TabsTrigger>
@@ -120,15 +140,19 @@ export default function TradingPage() {
         </TabsList>
 
         <TabsContent value="execute" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                New Trade
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleTrade} className="space-y-4">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-4">
+            <Card className="order-2 xl:order-1">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  New Trade
+                </CardTitle>
+                <CardDescription>
+                  Configure position size, direction, and risk with a tactile leverage control.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleTrade} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="tradeType">Trade Type</Label>
@@ -183,15 +207,93 @@ export default function TradingPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="leverage">Leverage</Label>
-                    <Input
-                      id="leverage"
-                      type="number"
-                      min="1"
-                      value={formData.leverage}
-                      onChange={(e) => setFormData({ ...formData, leverage: e.target.value })}
-                      placeholder="Enter leverage"
-                      required
-                    />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs text-gray-400">
+                        <span>Leverage</span>
+                        <span className="font-semibold text-primary">
+                          {leverageValue.toFixed(0)}x
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-gray-500 justify-between">
+                        <span>0x</span>
+                        <span>25x</span>
+                        <span>50x</span>
+                        <span>75x</span>
+                        <span>100x</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="relative flex-1 h-10 rounded-lg bg-background-dark border border-gray-800 px-3 flex items-center">
+                          {/* Ruler backdrop */}
+                          <div className="absolute left-3 right-3 h-1 rounded-full bg-gradient-to-r from-gray-500 via-emerald-400 via-yellow-300 to-red-500" />
+                          {/* Graduated ticks every 5x, major every 20x */}
+                          <div className="absolute inset-x-3 bottom-1.5 flex h-4 items-end pointer-events-none">
+                            {Array.from({ length: 21 }).map((_, index) => {
+                              const value = index * 5; // 0..100
+                              const isMajor = value % 20 === 0;
+                              let color = "#6b7280"; // ash / gray
+                              if (value >= 60 && value < 85) color = "#f97316"; // orange
+                              if (value >= 85) color = "#ef4444"; // red
+                              return (
+                                <div key={value} className="flex-1 flex justify-center">
+                                  <div
+                                    style={{
+                                      width: isMajor ? 2 : 1,
+                                      height: isMajor ? 16 : 8,
+                                      backgroundColor: color,
+                                      opacity: 0.8,
+                                    }}
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {/* Continuous slider on top */}
+                          <input
+                            id="leverage"
+                            type="range"
+                            min={1}
+                            max={100}
+                            value={leverageValue}
+                            onChange={(e) =>
+                              setFormData({ ...formData, leverage: e.target.value })
+                            }
+                            className="relative z-10 w-full h-1 bg-transparent appearance-none cursor-pointer"
+                          />
+                          <style jsx>{`
+                            input[type="range"]::-webkit-slider-runnable-track {
+                              height: 4px;
+                              background: transparent;
+                            }
+                            input[type="range"]::-moz-range-track {
+                              height: 4px;
+                              background: transparent;
+                            }
+                            input[type="range"]::-webkit-slider-thumb {
+                              -webkit-appearance: none;
+                              appearance: none;
+                              margin-top: -6px;
+                              height: 16px;
+                              width: 16px;
+                              border-radius: 9999px;
+                              background: #020617;
+                              border: 2px solid #f97316;
+                              box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.35);
+                            }
+                            input[type="range"]::-moz-range-thumb {
+                              height: 16px;
+                              width: 16px;
+                              border-radius: 9999px;
+                              background: #020617;
+                              border: 2px solid #f97316;
+                              box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.35);
+                            }
+                          `}</style>
+                        </div>
+                        <div className="px-3 py-1 rounded-md bg-background-dark border border-gray-800 text-[11px] text-gray-200">
+                          {leverageValue.toFixed(0)}x
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -274,7 +376,32 @@ export default function TradingPage() {
                 </Button>
               </form>
             </CardContent>
-          </Card>
+            </Card>
+
+            {/* Right side: futuristic chart placeholder / TradingView iframe */}
+            <Card className="order-1 xl:order-2">
+              <CardHeader>
+                <CardTitle>Live Market View</CardTitle>
+                <CardDescription>
+                  Embed your preferred TradingView or custom chart here for full-screen execution.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="relative w-full h-[260px] md:h-[320px] rounded-xl border border-primary/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+                  <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_0%_0%,#22c55e_0,transparent_55%),radial-gradient(circle_at_100%_100%,#0ea5e9_0,transparent_55%)]" />
+                  <div className="relative z-10 flex h-full items-center justify-center">
+                    <p className="text-xs md:text-sm text-gray-300 text-center px-6">
+                      TradingView advanced chart embed goes here. Connect it to the selected{" "}
+                      <span className="font-semibold text-white">
+                        {formData.pair || "market"}
+                      </span>{" "}
+                      to mirror professional trading terminals.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
