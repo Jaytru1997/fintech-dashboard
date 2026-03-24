@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ToastContainer } from "react-toastify";
+import Script from "next/script";
 
 const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -32,19 +33,20 @@ export default function RootLayout({
       >
         {children}
         <Toaster />
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
-      </body>
-    </html>
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="dark"
+          />
+          <Script src="//code.jivosite.com/widget/YyEbLYwssD" strategy="lazyOnload" />
+        </body>
+      </html>
   );
 }
