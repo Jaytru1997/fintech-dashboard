@@ -10,10 +10,11 @@ import { Trade } from "@/lib/types";
 import { toast } from "react-toastify";
 import { QuickTradePanel } from "@/components/trading/QuickTradePanel";
 import { TradingViewWidget } from "@/components/trading/TradingViewWidget";
-import { formatPairToTradingViewSymbol, mapTradingViewSymbolToPair } from "@/lib/utils";
+import { formatPairToTradingViewSymbol, mapTradingViewSymbolToPair, getCurrencySymbol } from "@/lib/utils";
 import { useUserStore } from "@/stores/user";
 import { useSearchParams } from "next/navigation";
 import { getStoredTradePair, setStoredTradePair } from "@/lib/storage/tradePair";
+import { useAuthStore } from "@/stores/auth";
 
 const tradePairs = ["BTC/USD", "ETH/USD", "EUR/USD", "GBP/USD"];
 
@@ -21,6 +22,8 @@ export default function TradingPage() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { balances, setBalances } = useUserStore();
+  const { user } = useAuthStore();
+  const currencySymbol = getCurrencySymbol(user?.currency);
   const searchParams = useSearchParams();
   const symbolFromQuery = searchParams.get("symbol") || undefined;
   const pairFromSymbol = mapTradingViewSymbolToPair(symbolFromQuery);
@@ -173,7 +176,7 @@ export default function TradingPage() {
                       <TableRow key={trade._id}>
                         <TableCell>{trade.tradeType}</TableCell>
                         <TableCell>{trade.pair}</TableCell>
-                        <TableCell>${trade.amount.toLocaleString()}</TableCell>
+                        <TableCell>{currencySymbol}{trade.amount.toLocaleString()}</TableCell>
                         <TableCell>{trade.leverage}x</TableCell>
                         <TableCell>
                           <span

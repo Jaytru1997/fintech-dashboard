@@ -14,6 +14,7 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   PieChart,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-toastify";
@@ -22,11 +23,13 @@ import { QuickTradePanel } from "@/components/trading/QuickTradePanel";
 import { TradingViewWidget } from "@/components/trading/TradingViewWidget";
 import { formatPairToTradingViewSymbol } from "@/lib/utils";
 import { getStoredTradePair, setStoredTradePair } from "@/lib/storage/tradePair";
+import { getCurrencySymbol } from "@/lib/utils";
 import type { Trade } from "@/lib/types";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const { balances, setBalances } = useUserStore();
+  const currencySymbol = getCurrencySymbol(user?.currency);
   const [isLoading, setIsLoading] = useState(true);
   const [isTradesLoading, setIsTradesLoading] = useState(true);
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -121,7 +124,7 @@ export default function DashboardPage() {
                   Main Balance
                 </p>
                 <p className="mt-1 text-3xl font-semibold text-white">
-                  ${balances?.main?.amount?.toLocaleString() || "0"}
+                  {currencySymbol}{balances?.main?.amount?.toLocaleString() || "0"}
                 </p>
               </div>
               <Link href="/dashboard/deposits">
@@ -153,7 +156,7 @@ export default function DashboardPage() {
                     <p className="text-gray-500 text-xs">{entry.value?.currency || "USD"}</p>
                   </div>
                   <div className="text-right text-xs text-gray-400">
-                    <p>${(entry.value?.amount ?? 0).toLocaleString()}</p>
+                    <p>{currencySymbol}{(entry.value?.amount ?? 0).toLocaleString()}</p>
                   </div>
                 </div>
               ))}
@@ -187,6 +190,26 @@ export default function DashboardPage() {
               </div>
               <SignalStrengthBar value={user?.signalStrength || 0} />
             </div>
+
+            {user?.minTradingAmount ? (
+              <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 mt-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                  <span className="text-[10px] uppercase tracking-widest text-amber-400/70 font-semibold">
+                    Minimum Trade Amount
+                  </span>
+                </div>
+                <p className="text-xl font-bold text-amber-400">
+                  {currencySymbol}{user.minTradingAmount.toLocaleString()}{" "}
+                  <span className="text-sm font-medium text-amber-400/70">
+                    {user.currency || "USD"}
+                  </span>
+                </p>
+                <p className="text-[10px] text-amber-400/50 mt-0.5">
+                  Your account requires trades of at least this amount.
+                </p>
+              </div>
+            ) : null}
             <div className="space-y-2 pt-2 border-t border-gray-800/60 mt-2">
               <div className="flex items-center justify-between text-xs text-gray-400">
                 <span>KYC Verification</span>
@@ -277,7 +300,7 @@ export default function DashboardPage() {
                         >
                           {trade.direction}
                         </p>
-                        <p>${trade.amount.toLocaleString()}</p>
+                        <p>{currencySymbol}{trade.amount.toLocaleString()}</p>
                       </div>
                     </div>
                   ))}
@@ -310,7 +333,7 @@ export default function DashboardPage() {
                         >
                           {trade.result ? trade.result.toUpperCase() : trade.direction}
                         </p>
-                        <p>${trade.amount.toLocaleString()}</p>
+                        <p>{currencySymbol}{trade.amount.toLocaleString()}</p>
                       </div>
                     </div>
                   ))}

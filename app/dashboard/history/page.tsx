@@ -9,8 +9,12 @@ import { userApi } from "@/lib/api/endpoints";
 import { Trade, Deposit, Withdrawal, Staking, RealEstateInvestment } from "@/lib/types";
 import { toast } from "react-toastify";
 import { History } from "lucide-react";
+import { useAuthStore } from "@/stores/auth";
+import { getCurrencySymbol } from "@/lib/utils";
 
 export default function HistoryPage() {
+  const { user } = useAuthStore();
+  const currencySymbol = getCurrencySymbol(user?.currency);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
@@ -116,7 +120,7 @@ export default function HistoryPage() {
                       <TableRow key={trade._id}>
                         <TableCell>{trade.tradeType}</TableCell>
                         <TableCell>{trade.pair}</TableCell>
-                        <TableCell>${trade.amount.toLocaleString()}</TableCell>
+                        <TableCell>{currencySymbol}{trade.amount.toLocaleString()}</TableCell>
                         <TableCell>{trade.direction.toUpperCase()}</TableCell>
                         <TableCell>
                           <span
@@ -289,7 +293,7 @@ export default function HistoryPage() {
                     stakings.map((staking) => (
                       <TableRow key={staking._id}>
                         <TableCell>{staking.poolName || "N/A"}</TableCell>
-                        <TableCell>${staking.amount.toLocaleString()}</TableCell>
+                        <TableCell>{currencySymbol}{staking.amount.toLocaleString()}</TableCell>
                         <TableCell>{staking.durationDays} days</TableCell>
                         <TableCell>
                           <span
@@ -343,7 +347,7 @@ export default function HistoryPage() {
                     investments.map((investment) => (
                       <TableRow key={investment._id}>
                         <TableCell>{investment.realEstateTitle || "N/A"}</TableCell>
-                        <TableCell>${investment.amount.toLocaleString()}</TableCell>
+                        <TableCell>{currencySymbol}{investment.amount.toLocaleString()}</TableCell>
                         <TableCell>{investment.durationMonths} months</TableCell>
                         <TableCell>
                           <span

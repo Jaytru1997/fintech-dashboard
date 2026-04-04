@@ -25,6 +25,7 @@ export default function AdminUsersPage() {
     realEstateBalance: "",
     referralBalance: "",
     signalStrength: "",
+    minTradingAmount: "",
     kycStatus: "pending" as "pending" | "approved" | "rejected",
     isAdmin: false,
   });
@@ -83,6 +84,12 @@ export default function AdminUsersPage() {
         const signalStrength = maybeNumber(formData.signalStrength);
         if (signalStrength !== undefined) {
           updateData.signalStrength = signalStrength;
+        }
+      }
+      if (formData.minTradingAmount) {
+        const minTradingAmount = maybeNumber(formData.minTradingAmount);
+        if (minTradingAmount !== undefined) {
+          updateData.minTradingAmount = minTradingAmount;
         }
       }
       if (formData.kycStatus) {
@@ -204,6 +211,7 @@ export default function AdminUsersPage() {
                                 realEstateBalance: user?.balances?.realEstate?.amount?.toString() || "",
                                 referralBalance: user?.balances?.referral?.amount?.toString() || "",
                                 signalStrength: (user?.signalStrength ?? 0).toString(),
+                                minTradingAmount: user?.minTradingAmount?.toString() || "",
                                 kycStatus: user?.kycStatus || "pending",
                                 isAdmin: user?.isAdmin ?? false,
                                 });
@@ -299,6 +307,18 @@ export default function AdminUsersPage() {
                                 />
                               </div>
                               <div className="space-y-2">
+                                <Label htmlFor="minTradingAmount">Minimum Trading Amount</Label>
+                                <Input
+                                  id="minTradingAmount"
+                                  type="number"
+                                  min="0"
+                                  value={formData.minTradingAmount}
+                                  onChange={(e) =>
+                                    setFormData({ ...formData, minTradingAmount: e.target.value })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-2">
                                 <Label htmlFor="kycStatus">KYC Status</Label>
                                 <select
                                   id="kycStatus"
@@ -309,11 +329,12 @@ export default function AdminUsersPage() {
                                       kycStatus: e.target.value as "pending" | "approved" | "rejected",
                                     })
                                   }
-                                  className="w-full rounded-md border border-gray-800 bg-background px-3 py-2"
+                                  className="w-full rounded-md border border-gray-700 text-white px-3 py-2"
+                                  style={{ backgroundColor: "#0f0e2a" }}
                                 >
-                                  <option value="pending">Pending</option>
-                                  <option value="approved">Approved</option>
-                                  <option value="rejected">Rejected</option>
+                                  <option value="pending" className="bg-[#1e1b4b] text-white">Pending</option>
+                                  <option value="approved" className="bg-[#1e1b4b] text-white">Approved</option>
+                                  <option value="rejected" className="bg-[#1e1b4b] text-white">Rejected</option>
                                 </select>
                               </div>
                               <div className="flex items-center space-x-2">

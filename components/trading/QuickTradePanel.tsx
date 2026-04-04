@@ -13,6 +13,7 @@ import type { Balances } from "@/lib/types";
 import clsx from "clsx";
 import { Checkbox } from "@/components/ui/checkbox";
 import { setStoredTradePair } from "@/lib/storage/tradePair";
+import { useAuthStore } from "@/stores/auth";
 
 type TradeSide = "BUY" | "SELL";
 
@@ -45,6 +46,7 @@ export function QuickTradePanel({
   onPairChange,
   pairs = defaultPairs,
 }: QuickTradePanelProps) {
+  const { user } = useAuthStore();
   const [tradeSide, setTradeSide] = useState<TradeSide>("BUY");
   const [isSubmittingTrade, setIsSubmittingTrade] = useState(false);
   const [isPriceLoading, setIsPriceLoading] = useState(false);
@@ -152,6 +154,12 @@ export function QuickTradePanel({
       toast.error("Enter a valid amount to trade");
       return;
     }
+
+    if (user?.minTradingAmount && amountNum < user.minTradingAmount) {
+      toast.error(`Minimum trading amount for your account is ${user.minTradingAmount} ${user.currency || 'USD'}`);
+      return;
+    }
+
     const duration = parseFloat(quickTrade.durationMinutes);
     if (!duration || duration <= 0) {
       toast.error("Enter a valid duration in minutes");
@@ -273,6 +281,14 @@ export function QuickTradePanel({
                 : "--"}
             </span>
           </div>
+          {user?.minTradingAmount && (
+            <div className="flex justify-between items-center pt-1 border-t border-gray-800">
+              <span className="text-amber-400/80">Min. trading amount:</span>
+              <span className="font-semibold text-amber-400">
+                {user.minTradingAmount.toLocaleString()} {user.currency || "USD"}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">

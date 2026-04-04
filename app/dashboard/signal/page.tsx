@@ -11,9 +11,11 @@ import { SignalPrice } from "@/lib/types";
 import { toast } from "react-toastify";
 import { TrendingUp } from "lucide-react";
 import { SignalStrengthBar } from "@/components/ui/SignalStrengthBar";
+import { getCurrencySymbol } from "@/lib/utils";
 
 export default function SignalPage() {
   const { user, updateUser } = useAuthStore();
+  const currencySymbol = getCurrencySymbol(user?.currency);
   const [signalPrices, setSignalPrices] = useState<SignalPrice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPrice, setSelectedPrice] = useState<SignalPrice | null>(null);
@@ -106,7 +108,7 @@ export default function SignalPage() {
           {signalPrices.map((price) => (
             <Card key={price._id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle>${price.amount.toLocaleString()}</CardTitle>
+                <CardTitle>{currencySymbol}{price.amount.toLocaleString()}</CardTitle>
                 <CardDescription>
                   Signal Boost: +{price.signalValue}%
                 </CardDescription>
@@ -125,7 +127,7 @@ export default function SignalPage() {
                     <DialogHeader>
                       <DialogTitle>Purchase Signal Strength</DialogTitle>
                     <DialogDescription>
-                      Pay ${price.amount.toLocaleString()} to gain +{price.signalValue}% signal strength.
+                      Pay {currencySymbol}{price.amount.toLocaleString()} to gain +{price.signalValue}% signal strength.
                     </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">

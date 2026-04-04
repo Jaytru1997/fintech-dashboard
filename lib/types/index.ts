@@ -13,6 +13,7 @@ export interface User {
   twoFactorEnabled: boolean;
   isAdmin: boolean;
   balances?: Balances;
+  minTradingAmount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -370,5 +371,6 @@ export interface UpdateUserRequest {
   signalStrength?: number;
   kycStatus?: "pending" | "approved" | "rejected";
   isAdmin?: boolean;
+  minTradingAmount?: number;
 }
 

@@ -14,8 +14,12 @@ import { userApi } from "@/lib/api/endpoints";
 import { MiningPool, Staking } from "@/lib/types";
 import { toast } from "react-toastify";
 import { Activity } from "lucide-react";
+import { useAuthStore } from "@/stores/auth";
+import { getCurrencySymbol } from "@/lib/utils";
 
 export default function MiningPage() {
+  const { user } = useAuthStore();
+  const currencySymbol = getCurrencySymbol(user?.currency);
   const [pools, setPools] = useState<MiningPool[]>([]);
   const [stakings, setStakings] = useState<Staking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -116,7 +120,7 @@ export default function MiningPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <p className="text-sm text-gray-400">
-                      Min Stake: ${pool.minStake}
+                      Min Stake: {currencySymbol}{pool.minStake}
                     </p>
                     <p className="text-sm text-gray-400">
                       Duration: {pool.durationDays} days
@@ -135,7 +139,7 @@ export default function MiningPage() {
                       <DialogHeader>
                         <DialogTitle>Stake in {pool.name}</DialogTitle>
                         <DialogDescription>
-                          ROI: {pool.roi}% | Min Stake: ${pool.minStake}
+                          ROI: {pool.roi}% | Min Stake: {currencySymbol}{pool.minStake}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
@@ -157,7 +161,7 @@ export default function MiningPage() {
                           <p className="text-sm text-white">Duration: {pool.durationDays} days</p>
                           <p className="text-sm text-gray-400 mt-2">Expected Return:</p>
                           <p className="text-2xl font-bold text-white">
-                            ${amount
+                            {currencySymbol}{amount
                               ? (parseFloat(amount) * (1 + pool.roi / 100)).toFixed(2)
                               : "0.00"}
                           </p>
@@ -213,7 +217,7 @@ export default function MiningPage() {
                     stakings.map((staking) => (
                       <TableRow key={staking._id}>
                         <TableCell>{getPoolLabel(staking.poolId)}</TableCell>
-                        <TableCell>${staking.amount.toLocaleString()}</TableCell>
+                        <TableCell>{currencySymbol}{staking.amount.toLocaleString()}</TableCell>
                         <TableCell>
                           {staking.startDate && staking.endDate
                             ? `${Math.ceil((new Date(staking.endDate).getTime() - new Date(staking.startDate).getTime()) / (1000 * 60 * 60 * 24))} days`

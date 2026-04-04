@@ -28,3 +28,56 @@ export function mapTradingViewSymbolToPair(symbol?: string) {
   return SYMBOL_TO_PAIR_MAP[symbol] || undefined;
 }
 
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  JPY: "¥",
+  CNY: "¥",
+  CHF: "Fr",
+  CAD: "CA$",
+  AUD: "A$",
+  NZD: "NZ$",
+  HKD: "HK$",
+  SGD: "S$",
+  KRW: "₩",
+  INR: "₹",
+  BRL: "R$",
+  MXN: "MX$",
+  ZAR: "R",
+  NGN: "₦",
+  GHS: "₵",
+  KES: "KSh",
+  AED: "د.إ",
+  SAR: "﷼",
+  TRY: "₺",
+  SEK: "kr",
+  NOK: "kr",
+  DKK: "kr",
+  PLN: "zł",
+  RUB: "₽",
+  THB: "฿",
+  MYR: "RM",
+  IDR: "Rp",
+  PHP: "₱",
+  VND: "₫",
+  CZK: "Kč",
+  HUF: "Ft",
+  RON: "lei",
+  ILS: "₪",
+  CLP: "CL$",
+  COP: "CO$",
+  ARS: "AR$",
+  PEN: "S/",
+  EGP: "E£",
+  PKR: "₨",
+  BDT: "৳",
+};
+
+/** Returns the symbol for a given ISO 4217 currency code, e.g. "EUR" → "€". Falls back to the code itself. */
+export function getCurrencySymbol(currency?: string | null): string {
+  if (!currency) return "$";
+  return CURRENCY_SYMBOLS[currency.toUpperCase()] ?? currency.toUpperCase();
+}
+
+
