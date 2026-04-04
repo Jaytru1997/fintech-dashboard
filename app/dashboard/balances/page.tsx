@@ -75,39 +75,40 @@ export default function BalancesPage() {
     );
   }
 
+  const defaultCurrency = user?.currency || "USD";
   const balanceCards = [
     {
       title: "Main Balance",
       amount: balances?.main?.amount || 0,
-      currency: balances?.main?.currency || "USD",
+      currency: balances?.main?.currency || defaultCurrency,
       icon: Wallet,
       color: "text-blue",
     },
     {
       title: "Mining Balance",
       amount: balances?.mining?.amount || 0,
-      currency: balances?.mining?.currency || "USD",
+      currency: balances?.mining?.currency || defaultCurrency,
       icon: Activity,
       color: "text-primary",
     },
     {
       title: "Trade Balance",
       amount: balances?.trade?.amount || 0,
-      currency: balances?.trade?.currency || "USD",
+      currency: balances?.trade?.currency || defaultCurrency,
       icon: TrendingUp,
       color: "text-purple",
     },
     {
       title: "Real Estate",
       amount: balances?.realEstate?.amount || 0,
-      currency: balances?.realEstate?.currency || "USD",
+      currency: balances?.realEstate?.currency || defaultCurrency,
       icon: Building2,
       color: "text-primary-dark",
     },
     {
       title: "Referral",
       amount: balances?.referral?.amount || 0,
-      currency: balances?.referral?.currency || "USD",
+      currency: balances?.referral?.currency || defaultCurrency,
       icon: Users,
       color: "text-blue-sky",
     },
@@ -130,7 +131,7 @@ export default function BalancesPage() {
         <div className="flex items-center gap-4">
           <span className="text-xs text-gray-300">Default Currency:</span>
           <Select
-            value={balances?.main?.currency || user?.currency || "USD"}
+            value={balances?.main?.currency || user?.currency || defaultCurrency}
             onValueChange={handleCurrencyChange}
             disabled={isUpdating}
           >

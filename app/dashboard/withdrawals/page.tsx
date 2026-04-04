@@ -14,8 +14,11 @@ import { userApi } from "@/lib/api/endpoints";
 import { Withdrawal, WithdrawalMethod } from "@/lib/types";
 import { toast } from "react-toastify";
 import { ArrowUpCircle } from "lucide-react";
+import { useAuthStore } from "@/stores/auth";
 
 export default function WithdrawalsPage() {
+  const { user } = useAuthStore();
+  const userCurrency = user?.currency || "USD";
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [methods, setMethods] = useState<WithdrawalMethod[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,7 +27,7 @@ export default function WithdrawalsPage() {
     balanceType: "main" as "main" | "mining" | "trade" | "realEstate" | "referral",
     methodId: "",
     amount: "",
-    currency: "USD",
+    currency: userCurrency,
     details: {
       accountNumber: "",
       bankName: "",
@@ -82,7 +85,7 @@ export default function WithdrawalsPage() {
         balanceType: "main",
         methodId: "",
         amount: "",
-        currency: "USD",
+        currency: userCurrency,
         details: {
           accountNumber: "",
           bankName: "",

@@ -14,6 +14,7 @@ import { userApi } from "@/lib/api/endpoints";
 import { Deposit, DepositMethod } from "@/lib/types";
 import { toast } from "react-toastify";
 import { ArrowDownCircle, Upload } from "lucide-react";
+import { useAuthStore } from "@/stores/auth";
 
 const formatDetailKey = (key: string) =>
   key
@@ -24,6 +25,8 @@ const formatDetailKey = (key: string) =>
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
 export default function DepositsPage() {
+  const { user } = useAuthStore();
+  const userCurrency = user?.currency || "USD";
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [methods, setMethods] = useState<DepositMethod[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +34,7 @@ export default function DepositsPage() {
   const [formData, setFormData] = useState({
     methodId: "",
     amount: "",
-    currency: "USD",
+    currency: userCurrency,
     proof: null as File | null,
   });
 
@@ -103,7 +106,7 @@ export default function DepositsPage() {
       setFormData({
         methodId: "",
         amount: "",
-        currency: "USD",
+        currency: userCurrency,
         proof: null,
       });
       loadData();

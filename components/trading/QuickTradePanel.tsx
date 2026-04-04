@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { userApi } from "@/lib/api/endpoints";
 import type { Balances } from "@/lib/types";
 import clsx from "clsx";
+import { getCurrencySymbol } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { setStoredTradePair } from "@/lib/storage/tradePair";
 import { useAuthStore } from "@/stores/auth";
@@ -47,6 +48,8 @@ export function QuickTradePanel({
   pairs = defaultPairs,
 }: QuickTradePanelProps) {
   const { user } = useAuthStore();
+  const userCurrencyCode = user?.currency || "USD";
+  const userCurrencySymbol = getCurrencySymbol(userCurrencyCode);
   const [tradeSide, setTradeSide] = useState<TradeSide>("BUY");
   const [isSubmittingTrade, setIsSubmittingTrade] = useState(false);
   const [isPriceLoading, setIsPriceLoading] = useState(false);
@@ -156,7 +159,7 @@ export function QuickTradePanel({
     }
 
     if (user?.minTradingAmount && amountNum < user.minTradingAmount) {
-      toast.error(`Minimum trading amount for your account is ${user.minTradingAmount} ${user.currency || 'USD'}`);
+      toast.error(`Minimum trading amount for your account is ${userCurrencySymbol}${user.minTradingAmount} (${userCurrencyCode})`);
       return;
     }
 
@@ -266,7 +269,7 @@ export function QuickTradePanel({
             <span>Trading account balance:</span>
             <span>
               {(prioritizedBalance?.amount ?? 0).toLocaleString()}{" "}
-              {prioritizedBalance?.currency || "USD"}
+              {prioritizedBalance?.currency || userCurrencyCode}
             </span>
           </div>
           <div className="flex justify-between">
@@ -277,7 +280,7 @@ export function QuickTradePanel({
               {isPriceLoading
                 ? "Loading..."
                 : livePrice
-                ? `${quoteSymbol === "USD" ? "$" : ""}${livePrice}`
+                ? `${getCurrencySymbol(quoteSymbol)}${livePrice}`
                 : "--"}
             </span>
           </div>
@@ -285,7 +288,7 @@ export function QuickTradePanel({
             <div className="flex justify-between items-center pt-1 border-t border-gray-800">
               <span className="text-amber-400/80">Min. trading amount:</span>
               <span className="font-semibold text-amber-400">
-                {user.minTradingAmount.toLocaleString()} {user.currency || "USD"}
+                {userCurrencySymbol}{user.minTradingAmount.toLocaleString()} {userCurrencyCode}
               </span>
             </div>
           )}

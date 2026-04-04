@@ -11,8 +11,12 @@ import { userApi } from "@/lib/api/endpoints";
 import { SubscriptionPlan, UserSubscription } from "@/lib/types";
 import { toast } from "react-toastify";
 import { CreditCard } from "lucide-react";
+import { useAuthStore } from "@/stores/auth";
+import { getCurrencySymbol } from "@/lib/utils";
 
 export default function SubscriptionsPage() {
+  const { user } = useAuthStore();
+  const currencySymbol = getCurrencySymbol(user?.currency);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [subscriptions, setSubscriptions] = useState<UserSubscription[]>([]);
@@ -79,7 +83,7 @@ export default function SubscriptionsPage() {
     }
     if (parsed < selectedPlan.minAmount || parsed > selectedPlan.maxAmount) {
       setAmountError(
-        `Amount must be between $${selectedPlan.minAmount.toLocaleString()} and $${selectedPlan.maxAmount.toLocaleString()}`
+        `Amount must be between ${currencySymbol}${selectedPlan.minAmount.toLocaleString()} and ${currencySymbol}${selectedPlan.maxAmount.toLocaleString()}`
       );
       return;
     }
@@ -95,7 +99,7 @@ export default function SubscriptionsPage() {
     }
     if (parsedAmount < selectedPlan.minAmount || parsedAmount > selectedPlan.maxAmount) {
       setAmountError(
-        `Amount must be between $${selectedPlan.minAmount.toLocaleString()} and $${selectedPlan.maxAmount.toLocaleString()}`
+        `Amount must be between ${currencySymbol}${selectedPlan.minAmount.toLocaleString()} and ${currencySymbol}${selectedPlan.maxAmount.toLocaleString()}`
       );
       return;
     }
@@ -118,7 +122,7 @@ export default function SubscriptionsPage() {
 
   const formatCurrency = (value?: number) => {
     if (typeof value !== "number") return "—";
-    return value.toLocaleString(undefined, { style: "currency", currency: "USD" });
+    return `${currencySymbol}${value.toLocaleString()}`;
   };
 
   const formatDate = (value?: string) => {
@@ -196,7 +200,7 @@ export default function SubscriptionsPage() {
                 {plan.name}
               </CardTitle>
               <CardDescription className="space-y-1">
-                <p>Min: ${plan.minAmount} | Max: ${plan.maxAmount}</p>
+                <p>Min: {currencySymbol}{plan.minAmount.toLocaleString()} | Max: {currencySymbol}{plan.maxAmount.toLocaleString()}</p>
                 <p>ROI: {plan.roi}% • Duration: {plan.durationDays} days</p>
               </CardDescription>
             </CardHeader>
@@ -283,8 +287,7 @@ export default function SubscriptionsPage() {
               <DialogHeader>
                 <DialogTitle>Subscribe to {selectedPlan.name}</DialogTitle>
                 <DialogDescription>
-                  Invest between ${selectedPlan.minAmount.toLocaleString()} and $
-                  {selectedPlan.maxAmount.toLocaleString()}. ROI {selectedPlan.roi}% over {selectedPlan.durationDays} days.
+                  Invest between {currencySymbol}{selectedPlan.minAmount.toLocaleString()} and {currencySymbol}{selectedPlan.maxAmount.toLocaleString()}. ROI {selectedPlan.roi}% over {selectedPlan.durationDays} days.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">

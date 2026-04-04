@@ -153,7 +153,7 @@ export default function DashboardPage() {
                 <div key={entry.label} className="flex items-center justify-between">
                   <div>
                     <p className="text-white font-medium">{entry.label}</p>
-                    <p className="text-gray-500 text-xs">{entry.value?.currency || "USD"}</p>
+                    <p className="text-gray-500 text-xs">{entry.value?.currency || user?.currency || "USD"}</p>
                   </div>
                   <div className="text-right text-xs text-gray-400">
                     <p>{currencySymbol}{(entry.value?.amount ?? 0).toLocaleString()}</p>
@@ -202,7 +202,7 @@ export default function DashboardPage() {
                 <p className="text-xl font-bold text-amber-400">
                   {currencySymbol}{user.minTradingAmount.toLocaleString()}{" "}
                   <span className="text-sm font-medium text-amber-400/70">
-                    {user.currency || "USD"}
+                    {user.currency}
                   </span>
                 </p>
                 <p className="text-[10px] text-amber-400/50 mt-0.5">
